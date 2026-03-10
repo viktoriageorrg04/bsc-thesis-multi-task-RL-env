@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "mt-locomotion-bench"
+version = "0.1.0"
+description = "Multi-task RL locomotion benchmark on Isaac Lab"
+requires-python = ">=3.10"
+dependencies = [
+    # Isaac Lab and its deps are expected to be pre-installed in the env
+    "gymnasium",
+    "numpy",
+    "pyyaml",
+    "tensorboard",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[tool.ruff]
+line-length = 100
