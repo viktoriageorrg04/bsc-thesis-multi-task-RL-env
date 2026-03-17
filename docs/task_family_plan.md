@@ -196,3 +196,78 @@ main contribution).
 **No new physics, reward terms, or observation types needed.** Everything
 is assembled from existing Isaac Lab building blocks; the novelty is in the
 benchmark organization and evaluation protocol.
+
+## 6. Minimal Benchmark Spec (v0.1, Phase 1 Freeze)
+
+### 6.1 Fixed robot and scope
+- Fixed robot: **Unitree Go2**.
+- Benchmark baseline scope: **6 tasks** across 3 families:
+  - Family A: A1 Forward Walk, A2 Omni Walk
+  - Family B: B1 Rough Walk, B2 Stair Climb
+  - Family C: C1 Stepping Stones, C2 Gap Crossing
+- Out of scope for this milestone: optional A3/B3/C3 and multi-robot variants.
+
+### 6.2 Shared interface (all tasks)
+
+#### Action space
+- Control mode: joint position action (Isaac Lab `JointPositionActionCfg`).
+- Controlled joints: all Go2 leg joints (12 total: 3 per leg x 4 legs).
+- Action vector: `a_t in R^12`, normalized in policy space, then scaled by env config.
+
+#### Observation space
+- Core proprioception terms:
+  - base linear velocity
+  - base angular velocity
+  - projected gravity
+  - commanded base velocity
+  - relative joint positions
+  - relative joint velocities
+  - previous action
+- Terrain term:
+  - `height_scan` for rough/custom tasks.
+- Shared shape policy:
+  - when a task has no scanner (flat), use a zero-filled `height_scan` placeholder in the benchmark wrapper so all tasks expose the same observation dimension.
+
+### 6.3 Task definitions (Phase 1 defaults)
+
+| Task | Terrain | Command ranges |
+|---|---|---|
+| A1 Forward Walk | plane | `lin_vel_x in [0.5, 1.0]`, `lin_vel_y = 0`, `ang_vel_z = 0` |
+| A2 Omni Walk | plane | `lin_vel_x in [-1.0, 1.0]`, `lin_vel_y in [-1.0, 1.0]`, heading/turn full-range |
+| B1 Rough Walk | `random_rough` only | same as A2 |
+| B2 Stair Climb | `pyramid_stairs` only | forward-biased: `lin_vel_x in [0.3, 0.8]`, low lateral/yaw |
+| C1 Stepping Stones | `HfSteppingStonesTerrainCfg` only | forward moderate speed, low lateral/yaw |
+| C2 Gap Crossing | `MeshGapTerrainCfg` only | forward moderate speed, low lateral/yaw |
+
+Notes:
+- B/C tasks isolate a single `sub_terrain` key each (no mixed terrain set).
+- C1/C2 are config-level extensions on top of the same locomotion base env.
+
+### 6.4 Success condition (benchmark-level, not reward-level)
+Define per-step success signal:
+- agent is alive (no terminal fall/contact),
+- planar tracking error below threshold: `||v_xy - v_xy_cmd||_2 <= eps_lin`,
+- yaw-rate tracking error below threshold: `|w_z - w_z_cmd| <= eps_ang`.
+
+Phase 1 default thresholds:
+- `eps_lin = 0.25 m/s`
+- `eps_ang = 0.50 rad/s`
+
+Episode success:
+- success-step ratio >= `0.80` over the episode
+- and no failure termination before timeout.
+
+### 6.5 Termination criteria
+Use shared termination logic:
+- timeout at episode horizon (`20 s` default),
+- illegal base contact / fall,
+- optional terrain out-of-bounds (enabled for generated terrains).
+
+### 6.6 Required logged stats per episode
+- `episode_success` (bool)
+- `success_step_ratio`
+- `mean_lin_vel_error_xy`
+- `mean_ang_vel_error_z`
+- `alive_time_s`
+- `termination_reason`
+- `task_id`, `family_id`

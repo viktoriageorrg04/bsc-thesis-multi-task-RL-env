@@ -218,3 +218,7 @@ wandb/
 # --- Analysis outputs ---
 analysis/plots/*
 !analysis/plots/.gitkeep
+
+# helper docs (comment out before the next meeting)
+docs/task_family_plan.md
+docs/slides_extracted.txt
