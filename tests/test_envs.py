@@ -66,6 +66,10 @@ EXPECTED_IDS = [
     "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-Play-v0",
     "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0",
     "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-Play-v0",
+    "MTL-Custom-SteppingStones-Unitree-Go2-C1-v0",
+    "MTL-Custom-SteppingStones-Unitree-Go2-C1-Play-v0",
+    "MTL-Custom-Gap-Unitree-Go2-C2-v0",
+    "MTL-Custom-Gap-Unitree-Go2-C2-Play-v0",
 ]
 
 
@@ -194,4 +198,82 @@ def test_b1_does_not_mutate_b2():
     cfg_b2 = Go2B2StairClimbEnvCfg()
     assert "random_rough" not in cfg_b2.scene.terrain.terrain_generator.sub_terrains
     assert "pyramid_stairs" not in cfg_b1.scene.terrain.terrain_generator.sub_terrains
+
+
+# fam C helpers + config specs
+
+
+def _load_fam_c_cfgs():
+    if _TORCH_PRIME_ERROR is not None:
+        pytest.skip(f"Skipping fam C cfg tests due to torch runtime preload failure: {_TORCH_PRIME_ERROR}")
+    try:
+        from envs.families.custom_terrain.go2_fam_c_env_cfg import (
+            Go2C1SteppingStonesEnvCfg,
+            Go2C2GapCrossingEnvCfg,
+        )
+    except Exception as exc:  # pragma: no cover - runtime/env dependent
+        pytest.skip(f"Skipping fam C cfg tests due to Isaac runtime import failure: {exc}")
+    return Go2C1SteppingStonesEnvCfg, Go2C2GapCrossingEnvCfg
+
+
+def test_c1_single_terrain():
+    Go2C1SteppingStonesEnvCfg, _ = _load_fam_c_cfgs()
+    cfg = Go2C1SteppingStonesEnvCfg()
+    gen = cfg.scene.terrain.terrain_generator
+    assert gen is not None
+    assert list(gen.sub_terrains.keys()) == ["stepping_stones"]
+
+
+def test_c2_single_terrain():
+    _, Go2C2GapCrossingEnvCfg = _load_fam_c_cfgs()
+    cfg = Go2C2GapCrossingEnvCfg()
+    gen = cfg.scene.terrain.terrain_generator
+    assert gen is not None
+    assert list(gen.sub_terrains.keys()) == ["gap"]
+
+
+def test_c1_command_ranges():
+    Go2C1SteppingStonesEnvCfg, _ = _load_fam_c_cfgs()
+    cfg = Go2C1SteppingStonesEnvCfg()
+    cmd = cfg.commands.base_velocity
+    assert cmd.ranges.lin_vel_x == (0.3, 0.6)
+    assert cmd.ranges.lin_vel_y == (-0.1, 0.1)
+    assert cmd.ranges.ang_vel_z == (-0.2, 0.2)
+    assert cmd.heading_command is False
+    assert cmd.rel_standing_envs == 0.0
+
+
+def test_c2_command_ranges():
+    _, Go2C2GapCrossingEnvCfg = _load_fam_c_cfgs()
+    cfg = Go2C2GapCrossingEnvCfg()
+    cmd = cfg.commands.base_velocity
+    assert cmd.ranges.lin_vel_x == (0.4, 0.8)
+    assert cmd.ranges.lin_vel_y == (-0.1, 0.1)
+    assert cmd.ranges.ang_vel_z == (-0.2, 0.2)
+    assert cmd.heading_command is False
+    assert cmd.rel_standing_envs == 0.0
+
+
+def test_c1_does_not_mutate_c2():
+    """C1 and C2 terrain generators are independent deep copies."""
+    Go2C1SteppingStonesEnvCfg, Go2C2GapCrossingEnvCfg = _load_fam_c_cfgs()
+    cfg_c1 = Go2C1SteppingStonesEnvCfg()
+    cfg_c2 = Go2C2GapCrossingEnvCfg()
+    assert "gap" not in cfg_c1.scene.terrain.terrain_generator.sub_terrains
+    assert "stepping_stones" not in cfg_c2.scene.terrain.terrain_generator.sub_terrains
+
+def test_c1_height_scanner_enabled():
+    """C1 inherits rough-env height scanner; must stay enabled."""
+    Go2C1SteppingStonesEnvCfg, _ = _load_fam_c_cfgs()
+    cfg = Go2C1SteppingStonesEnvCfg()
+    assert cfg.scene.height_scanner is not None
+    assert cfg.observations.policy.height_scan is not None
+
+
+def test_c2_height_scanner_enabled():
+    """C2 inherits rough-env height scanner; must stay enabled."""
+    _, Go2C2GapCrossingEnvCfg = _load_fam_c_cfgs()
+    cfg = Go2C2GapCrossingEnvCfg()
+    assert cfg.scene.height_scanner is not None
+    assert cfg.observations.policy.height_scan is not None
     
