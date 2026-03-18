@@ -7,36 +7,10 @@ A1 = forward-only walking, A2 = omni-directional walking.
 
 import math
 
-from isaaclab.managers import ObservationTermCfg as ObsTerm
-from isaaclab.managers import SceneEntityCfg
-from isaaclab.sensors import RayCasterCfg, patterns
 from isaaclab.utils import configclass
-from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 from isaaclab_tasks.manager_based.locomotion.velocity.config.go2.flat_env_cfg import (
     UnitreeGo2FlatEnvCfg,
 )
-import isaaclab_tasks.manager_based.locomotion.velocity.mdp as mdp
-
-
-def _restore_height_scan(cfg) -> None:
-    """re-enable the height scanner + obs term that UnitreeGo2FlatEnvCfg disables
-    => on a flat plane the scanner returns real distances"""
-    cfg.scene.height_scanner = RayCasterCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/base",
-        offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
-        ray_alignment="yaw",
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
-        debug_vis=False,
-        mesh_prim_paths=["/World/ground"],
-    )
-    cfg.scene.height_scanner.update_period = cfg.decimation * cfg.sim.dt
-
-    cfg.observations.policy.height_scan = ObsTerm(
-        func=mdp.height_scan,
-        params={"sensor_cfg": SceneEntityCfg("height_scanner")},
-        noise=Unoise(n_min=-0.1, n_max=0.1),
-        clip=(-1.0, 1.0),
-    )
 
 
 @configclass
@@ -48,7 +22,6 @@ class Go2A1ForwardWalkEnvCfg(UnitreeGo2FlatEnvCfg):
 
     def __post_init__(self):
         super().__post_init__()
-        _restore_height_scan(self)
 
         cmd = self.commands.base_velocity
         # A1 is not a heading-tracking task! so, we command explicit yaw-rate = 0 instead
@@ -74,7 +47,6 @@ class Go2A2OmniWalkEnvCfg(UnitreeGo2FlatEnvCfg):
 
     def __post_init__(self):
         super().__post_init__()
-        _restore_height_scan(self)
 
         cmd = self.commands.base_velocity
         # A2 uses heading-command mode for full turning behavior
