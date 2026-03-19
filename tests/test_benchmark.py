@@ -21,6 +21,14 @@ from envs.success import (
     compute_step_success_from_errors,
 )
 
+from benchmark.task_sampler import (
+    ALL_TRAIN_TASK_IDS,
+    TASK_ID_OFF,
+    TASK_ID_ON,
+    TaskIDConfig,
+    TaskSampler,
+)
+
 # defaults: eps_lin=0.25, eps_ang=0.50, min_success_ratio=0.80
 CFG = DEFAULT_SUCCESS_CONFIG
 NUM_ENVS = 4
@@ -464,3 +472,157 @@ class TestSuccessConfig:
     def test_frozen(self):
         with pytest.raises(AttributeError):
             CFG.eps_lin = 0.5
+
+
+# TaskSampler + TaskIDConfig
+
+class TestTaskIDConfig:
+    """Task-ID observation augmentation toggle."""
+
+    def test_default_is_off(self):
+        cfg = TaskIDConfig()
+        assert cfg.append_task_id is False
+
+    def test_preset_on(self):
+        assert TASK_ID_ON.append_task_id is True
+
+    def test_preset_off(self):
+        assert TASK_ID_OFF.append_task_id is False
+
+    def test_frozen(self):
+        with pytest.raises(AttributeError):
+            TASK_ID_ON.append_task_id = False
+
+
+class TestTaskSampler:
+    """Sampling distribution and task-index tests."""
+
+    # uniform distribution
+
+    def test_uniform_default(self):
+        """Default sampler uses all 6 training tasks, uniform weights."""
+        s = TaskSampler(seed=42)
+        assert s.num_tasks == 6
+        expected_prob = 1.0 / 6
+        for p in s.probabilities.tolist():
+            assert p == pytest.approx(expected_prob, abs=1e-6)
+
+    def test_uniform_sampling_hits_all_tasks(self):
+        """Over many draws, every task is sampled at least once."""
+        s = TaskSampler(seed=0)
+        seen: set[str] = set()
+        for _ in range(500):
+            _, gym_id = s.sample()
+            seen.add(gym_id)
+        assert seen == set(ALL_TRAIN_TASK_IDS)
+
+    def test_uniform_batch(self):
+        """sample_batch returns the correct number of results."""
+        s = TaskSampler(seed=7)
+        batch = s.sample_batch(100)
+        assert len(batch) == 100
+        for idx, gym_id in batch:
+            assert 0 <= idx < s.num_tasks
+            assert gym_id == s.task_ids[idx]
+
+    def test_uniform_distribution_empirical(self):
+        """Empirical frequencies should be roughly uniform (chi-squared-ish)."""
+        s = TaskSampler(seed=123)
+        counts = torch.zeros(s.num_tasks)
+        n = 6000
+        for _ in range(n):
+            idx, _ = s.sample()
+            counts[idx] += 1
+        freqs = counts / n
+        expected = 1.0 / s.num_tasks
+        # each freq within 5% of expected
+        for f in freqs.tolist():
+            assert abs(f - expected) < 0.05, f"freq {f:.3f} too far from {expected:.3f}"
+
+    # weighted distribution
+
+    def test_weighted_deterministic(self):
+        """Weight = (1, 0, 0, ...) → always picks task 0."""
+        weights = (1.0,) + (0.0,) * 5
+        s = TaskSampler(weights=weights, seed=99)
+        for _ in range(50):
+            idx, gym_id = s.sample()
+            assert idx == 0
+            assert gym_id == ALL_TRAIN_TASK_IDS[0]
+
+    def test_weighted_two_tasks(self):
+        """Weight concentrated on tasks 0 and 5 — others never sampled."""
+        weights = (5.0, 0.0, 0.0, 0.0, 0.0, 5.0)
+        s = TaskSampler(weights=weights, seed=42)
+        seen_indices: set[int] = set()
+        for _ in range(200):
+            idx, _ = s.sample()
+            seen_indices.add(idx)
+        assert seen_indices == {0, 5}
+
+    def test_weighted_normalisation(self):
+        """Unnormalised weights get normalised to probabilities."""
+        s = TaskSampler(
+            task_ids=("A", "B", "C"),
+            weights=(2.0, 3.0, 5.0),
+        )
+        probs = s.probabilities.tolist()
+        assert probs[0] == pytest.approx(0.2)
+        assert probs[1] == pytest.approx(0.3)
+        assert probs[2] == pytest.approx(0.5)
+
+    # seed reproducibility
+
+    def test_seed_reproducibility(self):
+        """Same seed → same sequence."""
+        s1 = TaskSampler(seed=77)
+        s2 = TaskSampler(seed=77)
+        seq1 = [s1.sample() for _ in range(20)]
+        seq2 = [s2.sample() for _ in range(20)]
+        assert seq1 == seq2
+
+    def test_different_seeds_differ(self):
+        """Different seeds → (very likely) different sequences."""
+        s1 = TaskSampler(seed=1)
+        s2 = TaskSampler(seed=2)
+        seq1 = [s1.sample()[0] for _ in range(50)]
+        seq2 = [s2.sample()[0] for _ in range(50)]
+        assert seq1 != seq2
+
+    # task_index lookup
+
+    def test_task_index_valid(self):
+        s = TaskSampler()
+        for i, tid in enumerate(ALL_TRAIN_TASK_IDS):
+            assert s.task_index(tid) == i
+
+    def test_task_index_invalid(self):
+        s = TaskSampler()
+        with pytest.raises(ValueError):
+            s.task_index("nonexistent-env-id")
+
+    # custom task list
+
+    def test_custom_task_ids(self):
+        s = TaskSampler(task_ids=("X", "Y"), seed=0)
+        assert s.num_tasks == 2
+        idx, gym_id = s.sample()
+        assert gym_id in ("X", "Y")
+
+    # validation
+
+    def test_empty_task_ids_raises(self):
+        with pytest.raises(ValueError, match="must not be empty"):
+            TaskSampler(task_ids=())
+
+    def test_weight_length_mismatch_raises(self):
+        with pytest.raises(ValueError, match="len"):
+            TaskSampler(weights=(1.0, 2.0))  # 6 tasks, 2 weights
+
+    def test_negative_weights_raises(self):
+        with pytest.raises(ValueError, match="non-negative"):
+            TaskSampler(task_ids=("A", "B"), weights=(-1.0, 1.0))
+
+    def test_all_zero_weights_raises(self):
+        with pytest.raises(ValueError, match="all be zero"):
+            TaskSampler(task_ids=("A", "B"), weights=(0.0, 0.0))
