@@ -1,6 +1,6 @@
 """Minimal benchmark interface v0.1 wrapper (obs/action/success/termination)."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import gymnasium as gym
@@ -13,11 +13,14 @@ from envs.success import (
     EpisodeStatsTracker,
     compute_step_success_from_errors,
     compute_tracking_errors,
+    get_success_config,
 )
 
 
 @dataclass(frozen=True)
 class BenchmarkInterfaceConfig:
+    """config for the benchmark wrapper"""
+
     # optional task ID conditioning; if True append scalar task_id to policy obs
     append_task_id: bool = False
     # cmd + robot names are from Isaac Lab locomotion velocity env cfg
@@ -25,10 +28,36 @@ class BenchmarkInterfaceConfig:
     robot_name: str = "robot"
     # expected horizon from LocomotionVelocityRoughEnvCfg; set by Isaac Lab as a default val
     episode_length_s: float = 20.0
+    # whether to include per-step reward breakdown in info
+    log_reward_breakdown: bool = True
+
+
+def _extract_reward_breakdown(env) -> dict[str, torch.Tensor]:
+    """extract per-term rewards from Isaac Lab's RewardManager"""
+    breakdown = {}
+    if not hasattr(env, "reward_manager"):
+        return breakdown
+
+    rm = env.reward_manager
+    term_names = rm.active_terms
+
+    # _step_reward is shape (num_envs, num_terms); holds rewards/dt for curr step
+    if hasattr(rm, "_step_reward"):
+        for idx, name in enumerate(term_names):
+            breakdown[f"reward/{name}"] = rm._step_reward[:, idx].clone()
+
+    return breakdown
 
 
 class MinimalBenchmarkWrapper(gym.Wrapper):
-    """wraps Isaac Lab envs with explicit benchmark v0.1 interface behavior"""
+    """wraps Isaac Lab envs with explicit benchmark v0.1 interface behavior
+
+    key features for multi-task RL eval:
+    - per-task success thresholds via get_success_config()
+    - reward term breakdown logging (from RewardManager)
+    - per-episode success/failure metrics
+    - optional task ID in obs
+    """
 
     def __init__(
         self,
@@ -36,21 +65,27 @@ class MinimalBenchmarkWrapper(gym.Wrapper):
         *,
         task_id: int,
         family_id: int,
+        task_gym_id: str,
         cfg: BenchmarkInterfaceConfig = BenchmarkInterfaceConfig(),
     ):
         super().__init__(env)
         self.task_id = int(task_id)
         self.family_id = int(family_id)
+        self.task_gym_id = str(task_gym_id)
         self.cfg = cfg
 
         self.action_schema = DEFAULT_ACTION_SCHEMA
         self.obs_schema = DEFAULT_OBSERVATION_SCHEMA
-        self.success_cfg = DEFAULT_SUCCESS_CONFIG
+
+        # per-task success config
+        self.success_cfg = get_success_config(self.task_gym_id)
 
         num_envs = int(getattr(env, "num_envs", 1))
         step_dt = float(getattr(env, "step_dt", 0.02))
         device = str(getattr(env, "device", "cpu"))
-        self._tracker = EpisodeStatsTracker(num_envs=num_envs, step_dt=step_dt, cfg=self.success_cfg, device=device)
+        self._tracker = EpisodeStatsTracker(
+            num_envs=num_envs, step_dt=step_dt, cfg=self.success_cfg, device=device
+        )
 
     def reset(self, **kwargs):
         obs, info = self.env.reset(**kwargs)
@@ -67,7 +102,13 @@ class MinimalBenchmarkWrapper(gym.Wrapper):
         terminated_t = torch.as_tensor(terminated, device=getattr(self.env, "device", "cpu")).bool()
         truncated_t = torch.as_tensor(truncated, device=getattr(self.env, "device", "cpu")).bool()
 
-        # success formula from v0.1 spec
+        # extract reward breakdown before computing success (dbg)
+        if self.cfg.log_reward_breakdown:
+            reward_breakdown = _extract_reward_breakdown(self.env)
+            info = dict(info)
+            info.update(reward_breakdown)
+
+        # success formula
         lin_err_xy, ang_err_z = compute_tracking_errors(
             self.env,
             command_name=self.cfg.command_name,
@@ -94,7 +135,7 @@ class MinimalBenchmarkWrapper(gym.Wrapper):
 
         # append episode metrics when sub-envs finish
         if episode_rows:
-            info = dict(info)
+            info = dict(info) if not isinstance(info, dict) else info
             info["benchmark/episodes"] = episode_rows
 
         return obs, reward, terminated, truncated, info
@@ -123,3 +164,4 @@ class MinimalBenchmarkWrapper(gym.Wrapper):
             obs = dict(obs)
             obs["policy"] = policy_obs
         return obs
+    
