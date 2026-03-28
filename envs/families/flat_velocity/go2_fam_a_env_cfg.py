@@ -1,77 +1,75 @@
 """Fam A (flat velocity) task configs for Unitree Go2.
 
-Uses UnitreeGo2RoughEnvCfg as the base (not FlatEnvCfg) so that the
-height scanner is active and obs dim = 235, matching B/C/MTL envs.
-A flat-only terrain generator means the scanner simply returns zeros.
-
-A1 = forward-only walking, A2 = omni-directional walking.
+Aligned to Isaac Lab's official Go2 flat setup:
+- flat plane terrain
+- no height scanner / no height_scan observation term
+- flat reward tuning
 """
 
-import copy
 import math
 
-import isaaclab.terrains as terrain_gen
-from isaaclab.terrains import TerrainGeneratorCfg
+from isaaclab.managers import RewardTermCfg as RewTerm
+from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
-from isaaclab_tasks.manager_based.locomotion.velocity.config.go2.rough_env_cfg import (
-    UnitreeGo2RoughEnvCfg,
+import isaaclab_tasks.manager_based.locomotion.velocity.mdp as locomotion_mdp
+from isaaclab_tasks.manager_based.locomotion.velocity.config.go2.flat_env_cfg import (
+    UnitreeGo2FlatEnvCfg,
 )
-
-# flat terrain gen; ensures height scanner exists (235D obs)
-# but the terrain itself is flat, so scan readings are ~0
-_FLAT_TERRAIN_GEN = TerrainGeneratorCfg(
-    size=(8.0, 8.0),
-    border_width=20.0,
-    num_rows=10,
-    num_cols=20,
-    horizontal_scale=0.1,
-    vertical_scale=0.005,
-    slope_threshold=0.75,
-    use_cache=False,
-    curriculum=True,
-    sub_terrains={
-        "flat": terrain_gen.HfRandomUniformTerrainCfg(
-            proportion=1.0,
-            noise_range=(0.0, 0.0),
-            noise_step=0.01,
-            border_width=0.25,
-        ),
-    },
-)
+from envs.rewards import stand_base_height_l2
 
 
 @configclass
-class Go2A1ForwardWalkEnvCfg(UnitreeGo2RoughEnvCfg):
-    """fam A / task A1: forward walk on flat terrain"""
+class Go2A1ForwardWalkEnvCfg(UnitreeGo2FlatEnvCfg):
+    """Fam A / task A1: forward walk on flat terrain."""
 
     def __post_init__(self):
         super().__post_init__()
 
-        self.scene.terrain.terrain_generator = copy.deepcopy(_FLAT_TERRAIN_GEN)
-
+        # A1 specialization: forward-only command profile
         cmd = self.commands.base_velocity
         cmd.heading_command = False
         cmd.rel_heading_envs = 0.0
-        cmd.rel_standing_envs = 0.0
-        cmd.ranges.lin_vel_x = (0.5, 1.0)
+        # increase zero-command exposure so policy learns to stand still
+        cmd.rel_standing_envs = 0.15
+        # keep forward-walk focus, but ease the minimum speed for earlier stable walking
+        cmd.ranges.lin_vel_x = (0.3, 1.0)
         cmd.ranges.lin_vel_y = (0.0, 0.0)
         cmd.ranges.ang_vel_z = (0.0, 0.0)
         cmd.ranges.heading = (0.0, 0.0)
 
+        # stand quality terms; active only when command is near zero
+        self.rewards.stand_still = RewTerm(
+            func=locomotion_mdp.stand_still_joint_deviation_l1,
+            weight=-0.2,
+            params={
+                "command_name": "base_velocity",
+                "command_threshold": 0.1,
+                "asset_cfg": SceneEntityCfg("robot"),
+            },
+        )
+        self.rewards.stand_base_height = RewTerm(
+            func=stand_base_height_l2,
+            weight=-5.0,
+            params={
+                "command_name": "base_velocity",
+                "target_height": 0.34,
+                "command_threshold": 0.1,
+                "asset_cfg": SceneEntityCfg("robot"),
+            },
+        )
+
 
 @configclass
-class Go2A2OmniWalkEnvCfg(UnitreeGo2RoughEnvCfg):
-    """fam A / task A2: omni-directional walk on flat terrain"""
+class Go2A2OmniWalkEnvCfg(UnitreeGo2FlatEnvCfg):
+    """Fam A / task A2: omni-directional walk on flat terrain."""
 
     def __post_init__(self):
         super().__post_init__()
-
-        self.scene.terrain.terrain_generator = copy.deepcopy(_FLAT_TERRAIN_GEN)
-
+        # Keep Isaac Lab default flat omni command profile.
         cmd = self.commands.base_velocity
         cmd.heading_command = True
         cmd.rel_heading_envs = 1.0
-        cmd.rel_standing_envs = 0.0
+        cmd.rel_standing_envs = 0.10
         cmd.ranges.lin_vel_x = (-1.0, 1.0)
         cmd.ranges.lin_vel_y = (-1.0, 1.0)
         cmd.ranges.ang_vel_z = (-1.0, 1.0)
@@ -80,7 +78,7 @@ class Go2A2OmniWalkEnvCfg(UnitreeGo2RoughEnvCfg):
 
 @configclass
 class Go2A1ForwardWalkEnvCfg_PLAY(Go2A1ForwardWalkEnvCfg):
-    """lightweight play/vis variant for A1."""
+    """Lightweight play/vis variant for A1."""
 
     def __post_init__(self):
         super().__post_init__()
@@ -93,7 +91,7 @@ class Go2A1ForwardWalkEnvCfg_PLAY(Go2A1ForwardWalkEnvCfg):
 
 @configclass
 class Go2A2OmniWalkEnvCfg_PLAY(Go2A2OmniWalkEnvCfg):
-    """lightweight play/vis variant for A2."""
+    """Lightweight play/vis variant for A2."""
 
     def __post_init__(self):
         super().__post_init__()
