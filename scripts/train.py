@@ -91,6 +91,57 @@ parser.add_argument(
     ],
     help="TensorBoard scalar tags to export/plot.",
 )
+parser.add_argument(
+    "--stand_reward_anneal",
+    action=argparse.BooleanOptionalAction,
+    default=True,
+    help=(
+        "Anneal stand-related reward weights during training (strong early, weaker later). "
+        "No-op when stand reward terms are absent for the selected task."
+    ),
+)
+parser.add_argument(
+    "--stand_anneal_start_frac",
+    type=float,
+    default=0.0,
+    help="Training-progress fraction where stand reward annealing starts (0.0-1.0).",
+)
+parser.add_argument(
+    "--stand_anneal_end_frac",
+    type=float,
+    default=0.20,
+    help="Training-progress fraction where stand reward annealing reaches late-stage weights (0.0-1.0).",
+)
+parser.add_argument(
+    "--stand_still_weight_early",
+    type=float,
+    default=-1.0,
+    help="Early-stage weight for reward term 'stand_still'.",
+)
+parser.add_argument(
+    "--stand_still_weight_late",
+    type=float,
+    default=-0.35,
+    help="Late-stage weight for reward term 'stand_still'.",
+)
+parser.add_argument(
+    "--stand_height_weight_early",
+    type=float,
+    default=-12.0,
+    help="Early-stage weight for reward term 'stand_base_height'.",
+)
+parser.add_argument(
+    "--stand_height_weight_late",
+    type=float,
+    default=-6.0,
+    help="Late-stage weight for reward term 'stand_base_height'.",
+)
+parser.add_argument(
+    "--schedule_check_interval",
+    type=int,
+    default=25,
+    help="PPO-iteration chunk size used for reward annealing when early stopping is disabled.",
+)
 
 # video
 parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
@@ -217,14 +268,138 @@ def _metric_improved(candidate: float, best: float | None, mode: str, min_delta:
     return candidate < best - min_delta
 
 
-def _train_with_early_stopping(runner: OnPolicyRunner, max_iterations: int, log_dir: str) -> int:
-    """Train in chunks and stop early when monitored metric plateaus."""
-    enabled = args_cli.early_stop_patience > 0
-    if not enabled:
-        runner.learn(num_learning_iterations=max_iterations, init_at_random_ep_len=True)
-        return max_iterations
+def _find_reward_manager(env) -> tuple[object | None, object | None]:
+    """Find a reward manager across common wrapper stacks."""
+    queue = [env]
+    visited = set()
+    while queue:
+        current = queue.pop(0)
+        if current is None:
+            continue
+        marker = id(current)
+        if marker in visited:
+            continue
+        visited.add(marker)
+
+        reward_manager = getattr(current, "reward_manager", None)
+        if reward_manager is not None:
+            return reward_manager, current
+
+        for attr in ("unwrapped", "env", "venv"):
+            child = getattr(current, attr, None)
+            if child is not None and id(child) not in visited:
+                queue.append(child)
+    return None, None
+
+
+def _get_reward_term_cfg(reward_manager, term_name: str):
+    """Best-effort reward-term config getter across manager implementations."""
+    if hasattr(reward_manager, "get_term_cfg"):
+        try:
+            return reward_manager.get_term_cfg(term_name)
+        except Exception:
+            return None
+
+    term_cfgs = getattr(reward_manager, "_term_cfgs", None)
+    term_names = getattr(reward_manager, "_term_names", None)
+    if isinstance(term_cfgs, dict):
+        return term_cfgs.get(term_name)
+    if isinstance(term_cfgs, list) and isinstance(term_names, list) and term_name in term_names:
+        return term_cfgs[term_names.index(term_name)]
+    return None
+
+
+def _set_reward_term_weight(reward_manager, term_name: str, new_weight: float) -> bool:
+    """Best-effort reward-term weight setter across manager implementations."""
+    term_cfg = _get_reward_term_cfg(reward_manager, term_name)
+    if term_cfg is None:
+        return False
+
+    term_cfg.weight = float(new_weight)
+
+    if hasattr(reward_manager, "set_term_cfg"):
+        try:
+            reward_manager.set_term_cfg(term_name, term_cfg)
+            return True
+        except Exception:
+            pass
+
+    term_cfgs = getattr(reward_manager, "_term_cfgs", None)
+    term_names = getattr(reward_manager, "_term_names", None)
+    if isinstance(term_cfgs, dict):
+        term_cfgs[term_name] = term_cfg
+        return True
+    if isinstance(term_cfgs, list) and isinstance(term_names, list) and term_name in term_names:
+        term_cfgs[term_names.index(term_name)] = term_cfg
+        return True
+
+    return False
+
+
+def _lerp_weight(
+    progress_iter: int,
+    max_iterations: int,
+    start_frac: float,
+    end_frac: float,
+    weight_early: float,
+    weight_late: float,
+) -> float:
+    """Piecewise-linear weight schedule from early to late value."""
+    total = max(1, int(max_iterations))
+    start_iter = int(round(max(0.0, min(1.0, start_frac)) * total))
+    end_iter = int(round(max(0.0, min(1.0, end_frac)) * total))
+
+    if end_iter <= start_iter:
+        end_iter = min(total, start_iter + 1)
+
+    if progress_iter <= start_iter:
+        return float(weight_early)
+    if progress_iter >= end_iter:
+        return float(weight_late)
+
+    alpha = (progress_iter - start_iter) / float(end_iter - start_iter)
+    return float((1.0 - alpha) * weight_early + alpha * weight_late)
+
+
+def _apply_stand_reward_schedule(env, progress_iter: int, max_iterations: int) -> tuple[bool, float, float]:
+    """Update stand-related reward weights according to annealing schedule."""
+    if not args_cli.stand_reward_anneal:
+        return False, 0.0, 0.0
+
+    reward_manager, _ = _find_reward_manager(env)
+    if reward_manager is None:
+        return False, 0.0, 0.0
+
+    still_weight = _lerp_weight(
+        progress_iter=progress_iter,
+        max_iterations=max_iterations,
+        start_frac=args_cli.stand_anneal_start_frac,
+        end_frac=args_cli.stand_anneal_end_frac,
+        weight_early=args_cli.stand_still_weight_early,
+        weight_late=args_cli.stand_still_weight_late,
+    )
+    height_weight = _lerp_weight(
+        progress_iter=progress_iter,
+        max_iterations=max_iterations,
+        start_frac=args_cli.stand_anneal_start_frac,
+        end_frac=args_cli.stand_anneal_end_frac,
+        weight_early=args_cli.stand_height_weight_early,
+        weight_late=args_cli.stand_height_weight_late,
+    )
+
+    updated_still = _set_reward_term_weight(reward_manager, "stand_still", still_weight)
+    updated_height = _set_reward_term_weight(reward_manager, "stand_base_height", height_weight)
+    updated_any = updated_still or updated_height
+    return updated_any, still_weight, height_weight
+
+
+def _train_with_early_stopping(runner: OnPolicyRunner, max_iterations: int, log_dir: str, env) -> int:
+    """Train in chunks, with optional early stopping and stand-reward annealing."""
+    early_stop_enabled = args_cli.early_stop_patience > 0
 
     check_interval = max(1, args_cli.early_stop_check_interval)
+    schedule_interval = max(1, args_cli.schedule_check_interval)
+    train_chunk = check_interval if early_stop_enabled else schedule_interval
     warmup_iters = max(0, args_cli.early_stop_warmup)
     patience = max(1, args_cli.early_stop_patience)
     min_delta = max(0.0, args_cli.early_stop_min_delta)
@@ -234,19 +409,55 @@ def _train_with_early_stopping(runner: OnPolicyRunner, max_iterations: int, log_
     best_metric = None
     checks_without_improvement = 0
     trained_iterations = 0
+    schedule_detected = False
+    schedule_warned_missing = False
 
-    print(
-        f"[INFO] Early stopping enabled: metric='{metric_tag}', mode='{mode}', "
-        f"patience={patience}, min_delta={min_delta}, check_interval={check_interval}, warmup={warmup_iters}"
-    )
+    if early_stop_enabled:
+        print(
+            f"[INFO] Early stopping enabled: metric='{metric_tag}', mode='{mode}', "
+            f"patience={patience}, min_delta={min_delta}, check_interval={check_interval}, warmup={warmup_iters}"
+        )
+    if args_cli.stand_reward_anneal:
+        print(
+            "[INFO] Stand reward annealing enabled: "
+            f"stand_still {args_cli.stand_still_weight_early:.3f}->{args_cli.stand_still_weight_late:.3f}, "
+            f"stand_base_height {args_cli.stand_height_weight_early:.3f}->{args_cli.stand_height_weight_late:.3f}, "
+            f"progress={max(0.0, min(1.0, args_cli.stand_anneal_start_frac)):.2f}"
+            f"->{max(0.0, min(1.0, args_cli.stand_anneal_end_frac)):.2f}"
+        )
+    if not early_stop_enabled and not args_cli.stand_reward_anneal:
+        runner.learn(num_learning_iterations=max_iterations, init_at_random_ep_len=True)
+        return max_iterations
 
     while trained_iterations < max_iterations:
-        chunk = min(check_interval, max_iterations - trained_iterations)
+        updated, still_w, height_w = _apply_stand_reward_schedule(
+            env=env,
+            progress_iter=trained_iterations,
+            max_iterations=max_iterations,
+        )
+        if updated:
+            if not schedule_detected or trained_iterations in {0, max_iterations // 2}:
+                print(
+                    f"[SCHEDULE] iter={trained_iterations}: "
+                    f"stand_still={still_w:.3f}, stand_base_height={height_w:.3f}"
+                )
+            schedule_detected = True
+        elif args_cli.stand_reward_anneal and not schedule_detected and not schedule_warned_missing:
+            print(
+                "[WARN] Stand reward terms not found ('stand_still' / 'stand_base_height'); "
+                "annealing is a no-op for this task."
+            )
+            schedule_warned_missing = True
+
+        chunk = min(train_chunk, max_iterations - trained_iterations)
         runner.learn(
             num_learning_iterations=chunk,
             init_at_random_ep_len=(trained_iterations == 0),
         )
         trained_iterations += chunk
+
+        if not early_stop_enabled:
+            continue
 
         if trained_iterations < warmup_iters:
             continue
@@ -417,6 +628,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
         runner=runner,
         max_iterations=int(agent_cfg.max_iterations),
         log_dir=log_dir,
+        env=env,
     )
 
     if args_cli.plot_learning_curves:

@@ -29,10 +29,10 @@ class Go2A1ForwardWalkEnvCfg(UnitreeGo2FlatEnvCfg):
         cmd = self.commands.base_velocity
         cmd.heading_command = False
         cmd.rel_heading_envs = 0.0
-        # increase zero-command exposure so policy learns to stand still
-        cmd.rel_standing_envs = 0.15
-        # keep forward-walk focus, but ease the minimum speed for earlier stable walking
-        cmd.ranges.lin_vel_x = (0.3, 1.0)
+        # balanced standing exposure: enough stillness learning without suppressing locomotion
+        cmd.rel_standing_envs = 0.20
+        # forward-walk focus with clear non-zero speed on moving commands
+        cmd.ranges.lin_vel_x = (0.35, 1.0)
         cmd.ranges.lin_vel_y = (0.0, 0.0)
         cmd.ranges.ang_vel_z = (0.0, 0.0)
         cmd.ranges.heading = (0.0, 0.0)
@@ -40,7 +40,7 @@ class Go2A1ForwardWalkEnvCfg(UnitreeGo2FlatEnvCfg):
         # stand quality terms; active only when command is near zero
         self.rewards.stand_still = RewTerm(
             func=locomotion_mdp.stand_still_joint_deviation_l1,
-            weight=-0.2,
+            weight=-0.15,
             params={
                 "command_name": "base_velocity",
                 "command_threshold": 0.1,
@@ -49,7 +49,7 @@ class Go2A1ForwardWalkEnvCfg(UnitreeGo2FlatEnvCfg):
         )
         self.rewards.stand_base_height = RewTerm(
             func=stand_base_height_l2,
-            weight=-5.0,
+            weight=-2.5,
             params={
                 "command_name": "base_velocity",
                 "target_height": 0.34,
@@ -69,7 +69,7 @@ class Go2A2OmniWalkEnvCfg(UnitreeGo2FlatEnvCfg):
         cmd = self.commands.base_velocity
         cmd.heading_command = True
         cmd.rel_heading_envs = 1.0
-        cmd.rel_standing_envs = 0.10
+        cmd.rel_standing_envs = 0.08
         cmd.ranges.lin_vel_x = (-1.0, 1.0)
         cmd.ranges.lin_vel_y = (-1.0, 1.0)
         cmd.ranges.ang_vel_z = (-1.0, 1.0)
