@@ -49,10 +49,10 @@ class Go2A1ForwardWalkEnvCfg(UnitreeGo2FlatEnvCfg):
         )
         self.rewards.stand_base_height = RewTerm(
             func=stand_base_height_l2,
-            weight=-2.5,
+            weight=-2.0,
             params={
                 "command_name": "base_velocity",
-                "target_height": 0.34,
+                "target_height": 0.38,
                 "command_threshold": 0.1,
                 "asset_cfg": SceneEntityCfg("robot"),
             },
