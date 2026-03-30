@@ -361,6 +361,7 @@ def _lerp_weight(
     return float((1.0 - alpha) * weight_early + alpha * weight_late)
 
 
+# for standing curriculum; anneal stand-related reward weights
 def _apply_stand_reward_schedule(env, progress_iter: int, max_iterations: int) -> tuple[bool, float, float]:
     """Update stand-related reward weights according to annealing schedule."""
     if not args_cli.stand_reward_anneal:
@@ -569,7 +570,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     env_cfg.seed = agent_cfg.seed
     env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
 
-    # logging directory (always inside this project repo, independent of launch cwd)
+    # logging dir (inside the project repo)
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     log_root_path = os.path.join(project_root, "logs", "rsl_rl", agent_cfg.experiment_name)
     log_dir = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -589,7 +590,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
         render_mode="rgb_array" if args_cli.video else None,
     )
 
-    # video recording
+    # video recording (for visual inspection)
     if args_cli.video:
         video_kwargs = {
             "video_folder": os.path.join(log_dir, "videos", "train"),

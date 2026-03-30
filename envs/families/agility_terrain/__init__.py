@@ -1,4 +1,4 @@
-"""Fam C — custom stress-test terrains: stepping stones + gap crossing"""
+"""Fam C — agility terrains: stepping stones + gap crossing"""
 
 import gymnasium as gym
 

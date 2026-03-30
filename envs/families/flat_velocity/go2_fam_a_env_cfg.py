@@ -11,6 +11,7 @@ import math
 from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
+import isaaclab.envs.mdp as core_mdp
 import isaaclab_tasks.manager_based.locomotion.velocity.mdp as locomotion_mdp
 from isaaclab_tasks.manager_based.locomotion.velocity.config.go2.flat_env_cfg import (
     UnitreeGo2FlatEnvCfg,
@@ -25,13 +26,12 @@ class Go2A1ForwardWalkEnvCfg(UnitreeGo2FlatEnvCfg):
     def __post_init__(self):
         super().__post_init__()
 
-        # A1 specialization: forward-only command profile
         cmd = self.commands.base_velocity
         cmd.heading_command = False
         cmd.rel_heading_envs = 0.0
-        # balanced standing exposure: enough stillness learning without suppressing locomotion
+        # balanced standing exposure
         cmd.rel_standing_envs = 0.20
-        # forward-walk focus with clear non-zero speed on moving commands
+        # forward walk
         cmd.ranges.lin_vel_x = (0.35, 1.0)
         cmd.ranges.lin_vel_y = (0.0, 0.0)
         cmd.ranges.ang_vel_z = (0.0, 0.0)
@@ -65,15 +65,30 @@ class Go2A2OmniWalkEnvCfg(UnitreeGo2FlatEnvCfg):
 
     def __post_init__(self):
         super().__post_init__()
-        # Keep Isaac Lab default flat omni command profile.
+
         cmd = self.commands.base_velocity
         cmd.heading_command = True
         cmd.rel_heading_envs = 1.0
-        cmd.rel_standing_envs = 0.08
+        # minimal standing exposure — omni commands already span near-zero
+        # velocities, so the policy gets natural stillness practice
+        cmd.rel_standing_envs = 0.05
+        # omni-directional walk
         cmd.ranges.lin_vel_x = (-1.0, 1.0)
         cmd.ranges.lin_vel_y = (-1.0, 1.0)
         cmd.ranges.ang_vel_z = (-1.0, 1.0)
         cmd.ranges.heading = (-math.pi, math.pi)
+
+        # always-on height incentive — prevents collapsing without
+        # encouraging the "stand still" optimum (not command-gated)
+        self.rewards.base_height = RewTerm(
+            func=core_mdp.base_height_l2,
+            weight=-2.5,
+            params={
+                "target_height": 0.38,
+                "asset_cfg": SceneEntityCfg("robot"),
+                "sensor_cfg": None,
+            },
+        )
 
 
 @configclass

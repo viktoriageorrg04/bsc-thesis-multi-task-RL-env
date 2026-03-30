@@ -207,7 +207,7 @@ def _load_fam_c_cfgs():
     if _TORCH_PRIME_ERROR is not None:
         pytest.skip(f"Skipping fam C cfg tests due to torch runtime preload failure: {_TORCH_PRIME_ERROR}")
     try:
-        from envs.families.custom_terrain.go2_fam_c_env_cfg import (
+        from envs.families.agility_terrain.go2_fam_c_env_cfg import (
             Go2C1SteppingStonesEnvCfg,
             Go2C2GapCrossingEnvCfg,
         )

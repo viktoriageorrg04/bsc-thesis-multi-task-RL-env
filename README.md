@@ -15,7 +15,7 @@ suite of locomotion task families spanning flat, rough, and custom terrains.
 │   ├── families/           # one sub-package per task family
 │   │   ├── flat_velocity/  # Fam A  (Isaac Lab built-in wrappers)
 │   │   ├── rough_velocity/ # Fam B  (Isaac Lab built-in wrappers)
-│   │   └── custom_terrain/ # Fam C  (custom terrains — stairs, slopes, …)
+│   │   └── agility_terrain/ # Fam C  (agility terrains — stepping stones, gaps)
 │   ├── rewards/            # reusable reward components / terms
 │   ├── observations/       # shared obs-space definitions
 │   ├── actions/            # shared action conventions

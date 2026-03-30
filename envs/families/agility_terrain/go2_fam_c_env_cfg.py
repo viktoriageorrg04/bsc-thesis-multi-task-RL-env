@@ -1,4 +1,4 @@
-"""Fam C (custom terrain) task configs for Unitree Go2.
+"""Fam C (agility terrain) task configs for Unitree Go2.
 
 These are the custom stress-test tasks (not present in the Isaac Lab default
 suite).
