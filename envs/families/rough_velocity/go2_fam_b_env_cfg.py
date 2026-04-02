@@ -101,7 +101,13 @@ class Go2B1RoughWalkEnvCfg(UnitreeGo2RoughEnvCfg):
 
 @configclass
 class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
-    """fam B / task B2: stair climb on pyramid_stairs terrain only"""
+    """fam B / task B2: stair climb on pyramid_stairs terrain only.
+
+    Built on the proven Isaac Lab Go2 rough-velocity defaults with MINIMAL
+    changes.  Does NOT call _fix_rough_reward_shaping — that function
+    overrode Go2-tuned penalties (dof_torques 20x lighter, feet_air_time
+    25x heavier) which produced bad gaits on stairs.
+    """
 
     def __post_init__(self):
         super().__post_init__()
@@ -112,7 +118,7 @@ class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
         stairs = self.scene.terrain.terrain_generator.sub_terrains["pyramid_stairs"]
         stairs.step_height_range = (0.04, 0.16)
 
-        # B2 is forward-biased with low lateral/yaw commands
+        # B2 is forward-biased with low lateral/yaw commands.
         cmd = self.commands.base_velocity
         cmd.heading_command = False
         cmd.rel_heading_envs = 0.0
@@ -122,15 +128,36 @@ class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
         cmd.ranges.ang_vel_z = (-0.3, 0.3)
         cmd.ranges.heading = (0.0, 0.0)
 
-        _fix_rough_reward_shaping(self)
+        # ---- rewards: Go2 rough defaults are kept, only add posture ----
+        # Inherited from UnitreeGo2RoughEnvCfg (NOT overridden):
+        #   track_lin_vel_xy_exp = 1.5       (Go2 tuned)
+        #   track_ang_vel_z_exp  = 0.75      (Go2 tuned)
+        #   lin_vel_z_l2         = -2.0      (base default)
+        #   ang_vel_xy_l2        = -0.05     (base default)
+        #   dof_torques_l2       = -0.0002   (Go2 tuned — 20x base, critical!)
+        #   dof_acc_l2           = -2.5e-7   (Go2 tuned)
+        #   action_rate_l2       = -0.01     (base default)
+        #   feet_air_time        = 0.01      (Go2 tuned — light stepping signal)
+        #   undesired_contacts   = None      (Go2 disables this)
+        #   dof_pos_limits       = 0.0       (disabled)
 
         rw = self.rewards
-        # climbing stairs requires vertical velocity
-        rw.lin_vel_z_l2.weight = -0.5
-        # the robot naturally pitches when ascending
-        rw.flat_orientation_l2.weight = -1.5
-        # lower weight to avoid the policy fighting unstable height readings
-        rw.base_height.weight = -5.0
+
+        # posture: mild orientation penalty to discourage crawling.
+        # Annealed via --posture_reward_anneal (strong early, decays to this).
+        rw.flat_orientation_l2.weight = -1.0
+
+        # terrain-relative height target so the robot doesn't belly-flop.
+        # Annealed via --posture_reward_anneal.
+        rw.base_height = RewTerm(
+            func=core_mdp.base_height_l2,
+            weight=-2.0,
+            params={
+                "target_height": 0.37,
+                "asset_cfg": SceneEntityCfg("robot"),
+                "sensor_cfg": SceneEntityCfg("height_scanner"),
+            },
+        )
 
 
 @configclass

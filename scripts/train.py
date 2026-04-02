@@ -137,6 +137,52 @@ parser.add_argument(
     help="Late-stage weight for reward term 'stand_base_height'.",
 )
 parser.add_argument(
+    "--posture_reward_anneal",
+    action=argparse.BooleanOptionalAction,
+    default=False,
+    help=(
+        "Anneal always-on posture reward weights (base_height, flat_orientation_l2) "
+        "during training. Starts strong (robot learns to stand upright first) then "
+        "decays so locomotion is not blocked. Useful for rough-terrain tasks like B2."
+    ),
+)
+parser.add_argument(
+    "--posture_anneal_start_frac",
+    type=float,
+    default=0.0,
+    help="Training-progress fraction where posture annealing starts (0.0-1.0).",
+)
+parser.add_argument(
+    "--posture_anneal_end_frac",
+    type=float,
+    default=0.25,
+    help="Training-progress fraction where posture annealing reaches late-stage weights (0.0-1.0).",
+)
+parser.add_argument(
+    "--posture_height_weight_early",
+    type=float,
+    default=-10.0,
+    help="Early-stage weight for reward term 'base_height'.",
+)
+parser.add_argument(
+    "--posture_height_weight_late",
+    type=float,
+    default=-2.0,
+    help="Late-stage weight for reward term 'base_height'.",
+)
+parser.add_argument(
+    "--posture_orientation_weight_early",
+    type=float,
+    default=-5.0,
+    help="Early-stage weight for reward term 'flat_orientation_l2'.",
+)
+parser.add_argument(
+    "--posture_orientation_weight_late",
+    type=float,
+    default=-0.5,
+    help="Late-stage weight for reward term 'flat_orientation_l2'.",
+)
+parser.add_argument(
     "--schedule_check_interval",
     type=int,
     default=25,
@@ -394,6 +440,42 @@ def _apply_stand_reward_schedule(env, progress_iter: int, max_iterations: int) -
     return updated_any, still_weight, height_weight
 
 
+def _apply_posture_reward_schedule(env, progress_iter: int, max_iterations: int) -> tuple[bool, float, float]:
+    """Anneal always-on posture rewards (base_height, flat_orientation_l2).
+
+    Starts strong so the robot learns to stand upright, then decays so
+    locomotion is not blocked.  Used for rough-terrain tasks (e.g. B2).
+    """
+    if not args_cli.posture_reward_anneal:
+        return False, 0.0, 0.0
+
+    reward_manager, _ = _find_reward_manager(env)
+    if reward_manager is None:
+        return False, 0.0, 0.0
+
+    height_weight = _lerp_weight(
+        progress_iter=progress_iter,
+        max_iterations=max_iterations,
+        start_frac=args_cli.posture_anneal_start_frac,
+        end_frac=args_cli.posture_anneal_end_frac,
+        weight_early=args_cli.posture_height_weight_early,
+        weight_late=args_cli.posture_height_weight_late,
+    )
+    orientation_weight = _lerp_weight(
+        progress_iter=progress_iter,
+        max_iterations=max_iterations,
+        start_frac=args_cli.posture_anneal_start_frac,
+        end_frac=args_cli.posture_anneal_end_frac,
+        weight_early=args_cli.posture_orientation_weight_early,
+        weight_late=args_cli.posture_orientation_weight_late,
+    )
+
+    updated_height = _set_reward_term_weight(reward_manager, "base_height", height_weight)
+    updated_orientation = _set_reward_term_weight(reward_manager, "flat_orientation_l2", orientation_weight)
+    updated_any = updated_height or updated_orientation
+    return updated_any, height_weight, orientation_weight
+
+
 def _train_with_early_stopping(runner: OnPolicyRunner, max_iterations: int, log_dir: str, env) -> int:
     """Train in chunks, with optional early stopping and stand-reward annealing."""
     early_stop_enabled = args_cli.early_stop_patience > 0
@@ -412,6 +494,8 @@ def _train_with_early_stopping(runner: OnPolicyRunner, max_iterations: int, log_
     trained_iterations = 0
     schedule_detected = False
     schedule_warned_missing = False
+    posture_schedule_detected = False
+    posture_warned_missing = False
 
     if early_stop_enabled:
         print(
@@ -426,7 +510,16 @@ def _train_with_early_stopping(runner: OnPolicyRunner, max_iterations: int, log_
             f"progress={max(0.0, min(1.0, args_cli.stand_anneal_start_frac)):.2f}"
             f"->{max(0.0, min(1.0, args_cli.stand_anneal_end_frac)):.2f}"
         )
-    if not early_stop_enabled and not args_cli.stand_reward_anneal:
+    if args_cli.posture_reward_anneal:
+        print(
+            "[INFO] Posture reward annealing enabled: "
+            f"base_height {args_cli.posture_height_weight_early:.3f}->{args_cli.posture_height_weight_late:.3f}, "
+            f"flat_orientation_l2 {args_cli.posture_orientation_weight_early:.3f}->{args_cli.posture_orientation_weight_late:.3f}, "
+            f"progress={max(0.0, min(1.0, args_cli.posture_anneal_start_frac)):.2f}"
+            f"->{max(0.0, min(1.0, args_cli.posture_anneal_end_frac)):.2f}"
+        )
+    any_schedule = args_cli.stand_reward_anneal or args_cli.posture_reward_anneal
+    if not early_stop_enabled and not any_schedule:
         runner.learn(num_learning_iterations=max_iterations, init_at_random_ep_len=True)
         return max_iterations
 
@@ -449,6 +542,25 @@ def _train_with_early_stopping(runner: OnPolicyRunner, max_iterations: int, log_
                 "annealing is a no-op for this task."
             )
             schedule_warned_missing = True
+
+        posture_updated, posture_h_w, posture_o_w = _apply_posture_reward_schedule(
+            env=env,
+            progress_iter=trained_iterations,
+            max_iterations=max_iterations,
+        )
+        if posture_updated:
+            if not posture_schedule_detected or trained_iterations in {0, max_iterations // 2}:
+                print(
+                    f"[SCHEDULE] iter={trained_iterations}: "
+                    f"base_height={posture_h_w:.3f}, flat_orientation_l2={posture_o_w:.3f}"
+                )
+            posture_schedule_detected = True
+        elif args_cli.posture_reward_anneal and not posture_schedule_detected and not posture_warned_missing:
+            print(
+                "[WARN] Posture reward terms not found ('base_height' / 'flat_orientation_l2'); "
+                "annealing is a no-op for this task."
+            )
+            posture_warned_missing = True
 
         chunk = min(train_chunk, max_iterations - trained_iterations)
         runner.learn(
