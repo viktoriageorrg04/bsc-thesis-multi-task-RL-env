@@ -113,8 +113,7 @@ class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
         super().__post_init__()
         _keep_single_sub_terrain(self, "pyramid_stairs")
 
-        # scale down stair height for Go2 (upstream doesn't do this unlike
-        # boxes/random_rough) — 23 cm steps are over half the robot's height
+        # scale down stair height for Go2
         stairs = self.scene.terrain.terrain_generator.sub_terrains["pyramid_stairs"]
         stairs.step_height_range = (0.04, 0.16)
 
@@ -128,27 +127,14 @@ class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
         cmd.ranges.ang_vel_z = (-0.3, 0.3)
         cmd.ranges.heading = (0.0, 0.0)
 
-        # ---- rewards: Go2 rough defaults are kept, only add posture ----
-        # Inherited from UnitreeGo2RoughEnvCfg (NOT overridden):
-        #   track_lin_vel_xy_exp = 1.5       (Go2 tuned)
-        #   track_ang_vel_z_exp  = 0.75      (Go2 tuned)
-        #   lin_vel_z_l2         = -2.0      (base default)
-        #   ang_vel_xy_l2        = -0.05     (base default)
-        #   dof_torques_l2       = -0.0002   (Go2 tuned — 20x base, critical!)
-        #   dof_acc_l2           = -2.5e-7   (Go2 tuned)
-        #   action_rate_l2       = -0.01     (base default)
-        #   feet_air_time        = 0.01      (Go2 tuned — light stepping signal)
-        #   undesired_contacts   = None      (Go2 disables this)
-        #   dof_pos_limits       = 0.0       (disabled)
-
         rw = self.rewards
 
-        # posture: mild orientation penalty to discourage crawling.
-        # Annealed via --posture_reward_anneal (strong early, decays to this).
+        # posture: mild orientation penalty to discourage crawling
+        # annealed via --posture_reward_anneal (strong early, decays to this)
         rw.flat_orientation_l2.weight = -1.0
 
-        # terrain-relative height target so the robot doesn't belly-flop.
-        # Annealed via --posture_reward_anneal.
+        # terrain-relative height target so the robot doesn't belly-flop
+        # annealed via --posture_reward_anneal
         rw.base_height = RewTerm(
             func=core_mdp.base_height_l2,
             weight=-2.0,

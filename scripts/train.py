@@ -201,6 +201,12 @@ parser.add_argument("--resume", action="store_true", default=False, help="Resume
 parser.add_argument("--load_run", type=str, default=None, help="Name of the run folder to resume from.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint file to resume from.")
 parser.add_argument(
+    "--pretrained_checkpoint",
+    type=str,
+    default=None,
+    help="Path to a pretrained .pt file to initialize weights before training (for two-phase curriculum).",
+)
+parser.add_argument(
     "--logger", type=str, default=None, choices={"wandb", "tensorboard", "neptune"}, help="Logger backend."
 )
 parser.add_argument("--log_project_name", type=str, default=None, help="Project name for wandb/neptune.")
@@ -242,6 +248,7 @@ import importlib.metadata as metadata
 
 import isaaclab_tasks
 import envs.registry
+
 from isaaclab_tasks.utils import get_checkpoint_path
 from isaaclab_tasks.utils.hydra import hydra_task_config
 
@@ -731,6 +738,10 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     if resume_path is not None:
         print(f"[INFO] Loading model checkpoint from: {resume_path}")
         runner.load(resume_path)
+    elif args_cli.pretrained_checkpoint is not None:
+        print(f"[INFO] Loading pretrained weights from: {args_cli.pretrained_checkpoint}")
+        runner.load(args_cli.pretrained_checkpoint)
+        print("[INFO] Pretrained weights loaded — training starts fresh (iteration 0).")
 
     # save configs
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
