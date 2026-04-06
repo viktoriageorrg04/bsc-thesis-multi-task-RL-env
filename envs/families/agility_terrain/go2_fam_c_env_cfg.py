@@ -1,16 +1,11 @@
 """Fam C (agility terrain) task config for Unitree Go2.
 
-C2 = gap crossing (MeshGapTerrainCfg)
-     tests stride planning and balance recovery across discrete gaps
+C2 = gap crossing (MeshGapTerrainCfg); tests stride planning and balance recovery
 
 Isaac Lab's default ROUGH_TERRAINS_CFG does NOT include gap crossing, so C2
 needs a two-phase training approach:
-Phase 1 -> C2-Flat:  learn walking on gently-rough terrain
-(same cmd profile + rewards, just easier terrain)
+Phase 1 -> C2-Flat:  learn walking on gently-rough terrain; (same cmd profile + rewards, just easier terrain)
 Phase 2 -> C2:  finetune on gap terrain (--pretrained_checkpoint)
-
-Derived from UnitreeGo2RoughEnvCfg so it inherits Go2-scaled rewards,
-actuator config, height scanner, and termination logic unchanged.
 """
 
 import copy
@@ -44,7 +39,7 @@ def _safe_base_height_l2(
         ray_z_clean = torch.where(valid, ray_z, torch.zeros_like(ray_z))
         valid_count = valid.float().sum(dim=1).clamp(min=1.0)
         ground_z = ray_z_clean.sum(dim=1) / valid_count
-        # if ALL rays miss for an env, give zero penalty (fallback)
+        # if all rays miss for an env, give zero penalty
         all_invalid = ~valid.any(dim=1)
         ground_z[all_invalid] = asset.data.root_pos_w[all_invalid, 2] - target_height
         adjusted_target = target_height + ground_z
@@ -60,21 +55,17 @@ def _same_end_pair_penalty(
     """Penalize bounding gait: both front or both rear feet airborne together.
 
     Go2 foot order (.*FOOT regex): FL=0, FR=1, RL=2, RR=3.
-    Trot has diagonal pairs (FL+RR, FR+RL) in sync; bounding has same-end
-    pairs (FL+FR, RL+RR) in sync.  Penalizing the latter pushes toward trot.
     Returns 0 (trot/walk) to 2 (all feet off ground).
     """
     contact_sensor = env.scene.sensors[sensor_cfg.name]
     air_time = contact_sensor.data.current_air_time[:, sensor_cfg.body_ids]
     in_air = (air_time > 0).float()
     front_pair = in_air[:, 0] * in_air[:, 1]  # FL + FR both airborne
-    rear_pair = in_air[:, 2] * in_air[:, 3]   # RL + RR both airborne
+    rear_pair = in_air[:, 2] * in_air[:, 3]  # RL + RR both airborne
     return front_pair + rear_pair
 
 
-# Phase 1 terrain: gently-rough ground (flat at difficulty 0, up to 3 cm noise
-# at difficulty 9).  Same terrain type used for Go2 rough default, just
-# scaled down so the robot learns basic locomotion without surprises.
+# Phase 1 terrain: gently-rough ground
 _FLAT_PRETRAIN_GEN = TerrainGeneratorCfg(
     size=(8.0, 8.0),
     border_width=5.0,
@@ -94,8 +85,8 @@ _FLAT_PRETRAIN_GEN = TerrainGeneratorCfg(
 )
 
 # C2 terrain: 100 % gap crossing
-#   gap_width_range = (0.0, 0.20) → zero gap at difficulty 0, 20 cm at max.
-#   platform_width = 2.0 m → safe spawn zone.
+# gap_width_range = (0.0, 0.20) -> zero gap at difficulty 0, 20 cm at max
+# platform_width = 2.0 m -> spawn zone
 _GAP_TERRAIN_GEN = TerrainGeneratorCfg(
     size=(8.0, 8.0),
     border_width=5.0,
@@ -115,25 +106,16 @@ _GAP_TERRAIN_GEN = TerrainGeneratorCfg(
 
 
 def _apply_fam_c_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
-    """Common reward rebalancing for Fam C tasks.
-
-    The Go2 rough defaults cripple learning on hard single-terrain tasks:
-      - feet_air_time  = 0.01   (12.5x below base → no stepping incentive)
-      - undesired_contacts = None (disabled → flipping costs nothing)
-      - dof_torques_l2 = -2e-4  (20x above base → afraid to move)
-      - flat_orientation_l2 = 0  (disabled → can tilt freely)
-    We restore base-like values + moderate posture incentives.
-    """
     rw = cfg.rewards
 
-    # Velocity tracking: walking >> standing still
+    # velocity tracking
     rw.track_lin_vel_xy_exp.weight = 2.0
     rw.track_ang_vel_z_exp.weight = 1.0
 
-    # Stepping incentive: Go2 default 0.01 gives zero foot-lift signal
+    # stepping incentive
     rw.feet_air_time.weight = 0.25
 
-    # Penalize thigh/calf ground contact — directly punishes flip/crawl
+    # penalize thigh/calf ground contact (directly punishes flip/crawl)
     rw.undesired_contacts = RewTerm(
         func=core_mdp.undesired_contacts,
         weight=-1.0,
@@ -143,8 +125,7 @@ def _apply_fam_c_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
         },
     )
 
-    # Posture: strong base_height to discourage belly-sliding (safe function
-    # clamps sensor inf so high weights are OK — error bounded to ~0.05)
+    # posture: strong base_height to discourage belly-sliding
     rw.flat_orientation_l2 = RewTerm(func=core_mdp.flat_orientation_l2, weight=-2.0)
     rw.base_height = RewTerm(
         func=_safe_base_height_l2,
@@ -156,10 +137,10 @@ def _apply_fam_c_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
         },
     )
 
-    # Lighten torque penalty: Go2 default -2e-4 is 20x base
+    # torque penalty
     rw.dof_torques_l2.weight = -1.0e-5
 
-    # Trot gait enforcement: penalize same-end pairs airborne together
+    # trot gait enforcement
     rw.same_end_pair = RewTerm(
         func=_same_end_pair_penalty,
         weight=-1.0,
@@ -169,20 +150,12 @@ def _apply_fam_c_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# C2: Gap Crossing
-# ---------------------------------------------------------------------------
 
-# Phase 1: flat pretrain — learn walking with C2 command profile
+# Phase 1: flat pretrain; learn walking with C2 cmd profile
 
 @configclass
 class Go2C2FlatPretrainEnvCfg(UnitreeGo2RoughEnvCfg):
-    """Phase 1 pretrain for C2: learn walking on gentle-rough terrain.
-
-    Same command profile and rewards as C2 gap crossing, but on flat
-    terrain so the robot learns basic forward locomotion first.  Use the
-    resulting checkpoint as --pretrained_checkpoint for the C2 gap task.
-    """
+    """Phase 1 pretrain for C2: learn walking on gentle-rough terrain."""
 
     def __post_init__(self):
         super().__post_init__()
@@ -219,13 +192,13 @@ class Go2C2FlatPretrainEnvCfg_PLAY(Go2C2FlatPretrainEnvCfg):
 
 @configclass
 class Go2C2GapCrossingEnvCfg(UnitreeGo2RoughEnvCfg):
-    """Fam C / task C2: gap crossing — tests stride planning and recovery.
+    """Fam C / task C2: gap crossing; tests stride planning and recovery.
 
-    100% gap terrain.  At difficulty 0 gaps are zero-width — flat ground.
+    100% gap terrain. At difficulty 0 gaps are zero-width — flat ground.
     Curriculum scales gap width up to 20 cm at max difficulty.
 
     Train with --pretrained_checkpoint pointing to a Phase 1 (C2-Flat)
-    checkpoint so the robot starts with walking skills instead of from scratch.
+    ckpt so the robot starts with walking skills instead of from scratch.
     """
 
     def __post_init__(self):
