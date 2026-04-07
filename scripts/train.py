@@ -449,8 +449,7 @@ def _apply_stand_reward_schedule(env, progress_iter: int, max_iterations: int) -
 
 def _apply_posture_reward_schedule(env, progress_iter: int, max_iterations: int) -> tuple[bool, float, float]:
     """Anneal always-on posture rewards (base_height, flat_orientation_l2).
-
-    Starts strong so the robot learns to stand upright, then decays so
+    - starts strong so the robot learns to stand upright, then decays so
     locomotion is not blocked.  Used for rough-terrain tasks (e.g. B2).
     """
     if not args_cli.posture_reward_anneal:
@@ -780,7 +779,6 @@ if __name__ == "__main__":
 # isaaclab -p scripts/train.py --task MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0 --headless
 # isaaclab -p scripts/train.py --task MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0 --headless
 # isaaclab -p scripts/train.py --task MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0 --headless
-# isaaclab -p scripts/train.py --task MTL-Custom-SteppingStones-Unitree-Go2-C1-v0 --headless
 # isaaclab -p scripts/train.py --task MTL-Custom-Gap-Unitree-Go2-C2-v0 --headless
 
 # # multi-task

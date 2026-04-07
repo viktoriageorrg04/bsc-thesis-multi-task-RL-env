@@ -125,8 +125,8 @@ def _apply_fam_c_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
         },
     )
 
-    # posture: strong base_height to discourage belly-sliding
-    rw.flat_orientation_l2 = RewTerm(func=core_mdp.flat_orientation_l2, weight=-2.0)
+    # posture: strong orientation to prevent body tilt (matches B1)
+    rw.flat_orientation_l2 = RewTerm(func=core_mdp.flat_orientation_l2, weight=-5.0)
     rw.base_height = RewTerm(
         func=_safe_base_height_l2,
         weight=-10.0,
@@ -139,15 +139,6 @@ def _apply_fam_c_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
 
     # torque penalty
     rw.dof_torques_l2.weight = -1.0e-5
-
-    # trot gait enforcement
-    rw.same_end_pair = RewTerm(
-        func=_same_end_pair_penalty,
-        weight=-1.0,
-        params={
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*foot"),
-        },
-    )
 
 
 
