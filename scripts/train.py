@@ -292,11 +292,15 @@ def _latest_events_file(log_dir: str) -> str | None:
 
 def _read_scalar_series(log_dir: str, tag: str) -> tuple[np.ndarray, np.ndarray] | None:
     """Load scalar series for one TensorBoard tag."""
-    event_file = _latest_events_file(log_dir)
-    if event_file is None:
+    # Use the directory, not a single file — EventAccumulator aggregates
+    # all events files in the directory so the full training is captured.
+    if not glob(os.path.join(log_dir, "events.out.tfevents.*")):
         return None
 
-    ea = event_accumulator.EventAccumulator(event_file)
+    ea = event_accumulator.EventAccumulator(
+        log_dir,
+        size_guidance={event_accumulator.SCALARS: 0},
+    )
     ea.Reload()
 
     scalar_tags = ea.Tags().get("scalars", [])

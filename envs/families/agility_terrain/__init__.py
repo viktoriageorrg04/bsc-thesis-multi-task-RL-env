@@ -2,9 +2,10 @@
 
 import gymnasium as gym
 
-# custom runner cfg that switches noise_std_type to "log" so that the policy
-# std = exp(log_std) is always positive — prevents PPO std collapse crash
-_RSL_RL_FAM_C_CFG = f"{__name__}.rsl_rl_ppo_cfg:Go2FamCPPORunnerCfg"
+_RSL_RL_FAM_C_CFG = (
+    "isaaclab_tasks.manager_based.locomotion.velocity.config.go2.agents.rsl_rl_ppo_cfg:"
+    "UnitreeGo2RoughPPORunnerCfg"
+)
 
 # C2: Gap Crossing
 

@@ -27,7 +27,10 @@ def _read_scalar_series(log_dir: str, tag: str) -> tuple[np.ndarray, np.ndarray]
     if event_file is None:
         return None
 
-    ea = event_accumulator.EventAccumulator(event_file)
+    ea = event_accumulator.EventAccumulator(
+        log_dir,
+        size_guidance={event_accumulator.SCALARS: 0},
+    )
     ea.Reload()
     if tag not in ea.Tags().get("scalars", []):
         return None

@@ -1,4 +1,4 @@
-"""Cross-evaluate a trained checkpoint on all 6 single-task envs.
+"""Cross-evaluate a trained checkpoint on all 5 single-task envs.
 
   # eval multi-task policy on all tasks
   isaaclab -p scripts/evaluate.py \
@@ -56,13 +56,12 @@ from envs.success import (
     compute_step_success_from_errors,
 )
 
-# the 6 single-task eval envs (Play variants use fewer envs + no curriculum)
+# the 5 single-task eval envs (Play variants use fewer envs + no curriculum)
 EVAL_TASK_IDS = (
     "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0",
     "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0",
     "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0",
     "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0",
-    "MTL-Custom-SteppingStones-Unitree-Go2-C1-v0",
     "MTL-Custom-Gap-Unitree-Go2-C2-v0",
 )
 
@@ -72,7 +71,6 @@ TASK_FAMILY = {
     "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0": 0,
     "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0": 1,
     "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0": 1,
-    "MTL-Custom-SteppingStones-Unitree-Go2-C1-v0": 2,
     "MTL-Custom-Gap-Unitree-Go2-C2-v0": 2,
 }
 
@@ -82,7 +80,6 @@ TASK_SHORT = {
     "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0": "A2_omni",
     "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0": "B1_rough",
     "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0": "B2_stairs",
-    "MTL-Custom-SteppingStones-Unitree-Go2-C1-v0": "C1_stones",
     "MTL-Custom-Gap-Unitree-Go2-C2-v0": "C2_gap",
 }
 
@@ -175,7 +172,7 @@ def _summarize(episodes: list[dict]) -> dict:
 
 @hydra_task_config(args_cli.task, "rsl_rl_cfg_entry_point")
 def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
-    """cross-eval trained policy on all 6 benchmark tasks"""
+    """cross-eval trained policy on all 5 benchmark tasks"""
 
     # create a dummy env from the training task to load the policy
     env_cfg.scene.num_envs = args_cli.num_envs
@@ -193,7 +190,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     out_dir = os.path.join(args_cli.output_dir, train_short)
     os.makedirs(out_dir, exist_ok=True)
 
-    # cross-eval on all 6 tasks
+    # cross-eval on all 5 tasks
     summary_all = {}
     for eval_task in EVAL_TASK_IDS:
         short = TASK_SHORT[eval_task]

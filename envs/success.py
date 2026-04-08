@@ -145,7 +145,7 @@ class EpisodeStatsTracker:
 # fam success config
 # - A1/A2 (flat): tighter thresholds; robot should track precisely
 # - B1/B2 (rough): looser; velocity spikes during terrain traversal
-# - C1/C2 (custom): loosest; deliberate stepping, pauses, recovery
+# - C2 (custom): loosest; deliberate stepping, pauses, recovery
 
 TASK_SUCCESS_CONFIGS: dict[str, SuccessConfig] = {
     # fam A: flat velocity
@@ -155,7 +155,6 @@ TASK_SUCCESS_CONFIGS: dict[str, SuccessConfig] = {
     "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0": SuccessConfig(eps_lin=0.35, eps_ang=0.60, min_success_ratio=0.75),
     "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0": SuccessConfig(eps_lin=0.40, eps_ang=0.70, min_success_ratio=0.70),
     # fam C: custom stress-test (survival is the goal)
-    "MTL-Custom-SteppingStones-Unitree-Go2-C1-v0": SuccessConfig(eps_lin=0.45, eps_ang=0.75, min_success_ratio=0.65),
     "MTL-Custom-Gap-Unitree-Go2-C2-v0": SuccessConfig(eps_lin=0.45, eps_ang=0.75, min_success_ratio=0.65),
 }
 

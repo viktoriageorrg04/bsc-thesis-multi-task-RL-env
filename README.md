@@ -1,83 +1,90 @@
 # Multi-Task RL Locomotion Benchmark
 
-BSc Thesis — Data Science and AI  
+BSc Thesis — Data Science and AI
 **Author:** Viktoria Georgieva
 
-A multi-task reinforcement-learning benchmark for locomotion, built on
-[Isaac Lab](https://isaac-sim.github.io/IsaacLab/).  The project defines a
-reusable task interface, a success-based evaluation protocol, and a small
-suite of locomotion task families spanning flat, rough, and custom terrains.
+Multi-task reinforcement learning for quadruped locomotion on the **Unitree Go2**,
+built on [Isaac Lab](https://isaac-sim.github.io/IsaacLab/) with rsl_rl PPO.
+
+---
+
+## Tasks
+
+5 single-task baselines across 3 terrain families:
+
+| ID | Task | Terrain | Commands | Status |
+|----|------|---------|----------|--------|
+| A1 | Forward walk | Flat | forward-only `[0.5, 1.0]` m/s
+| A2 | Omni walk | Flat | omnidirectional `±1.0` m/s
+| B1 | Rough walk | Random rough | omnidirectional `±1.0` m/s
+| B2 | Stair climb | Pyramid stairs | forward-biased `[0.3, 0.8]` m/s
+| C2 | Gap crossing | Mesh gaps `0–20 cm` | forward-biased `[0.4, 0.8]` m/s
+
+All tasks share a 235-dim observation space (proprioception + height scan) and
+a 12-DoF joint position action space — single policy network is feasible.
+
+---
 
 ## Project layout
 
 ```
-├── envs/                   # Phase 1 + 2 — task & env definitions
-│   ├── families/           # one sub-package per task family
-│   │   ├── flat_velocity/  # Fam A  (Isaac Lab built-in wrappers)
-│   │   ├── rough_velocity/ # Fam B  (Isaac Lab built-in wrappers)
-│   │   └── agility_terrain/ # Fam C  (agility terrains — stepping stones, gaps)
-│   ├── rewards/            # reusable reward components / terms
-│   ├── observations/       # shared obs-space definitions
-│   ├── actions/            # shared action conventions
-│   ├── success.py          # unified success / termination logic
-│   └── registry.py         # Gymnasium task registration
-│
-├── benchmark/              # Phase 2 + 3 — benchmark layer
-│   ├── interface.py        # std Gymnasium wrapper exposed to algos
-│   ├── curriculum.py       # curriculum / task-staging logic
-│   ├── task_sampler.py     # multi-task sampling (Task ID vs No Task ID)
-│   └── metrics.py          # success rate, learning speed, transfer perf
-│
-├── configs/                # YAML / Python training & eval configs
-│   ├── tasks/              # per-task env configs (terrain params, etc.)
-│   ├── training/           # algo hyper-params (PPO, optional SAC/TD3)
-│   └── eval/               # eval-protocol configs (scaling, held-out, …)
-│
-├── scripts/                # Phase 3 — runnable entry points
-│   ├── train.py            # single / multi-task training driver
-│   ├── evaluate.py         # run eval protocol & collect metrics
-│   └── visualize.py        # render / record episodes
-│
-├── analysis/               # Phase 4 — post-hoc analysis & plots
-│   ├── compare.py          # single-task vs multi-task comparisons
-│   ├── transfer.py         # cross-family transfer analysis
-│   ├── reward_sensitivity.py  # reward-scaling sensitivity study
-│   └── plots/              # saved figures (gitignored except README)
-│
-├── tests/                  # unit & integration tests
-│   ├── test_envs.py
-│   ├── test_rewards.py
-│   └── test_benchmark.py
-│
-├── docs/                   # extra documentation / notes
-│   └── eval_protocol.md    # eval-protocol spec (for thesis appendix)
-│
-├── .gitignore
-├── pyproject.toml
-└── README.md
+envs/
+  families/
+    flat_velocity/      # A1, A2 — flat terrain configs
+    rough_velocity/     # B1, B2 — rough terrain configs
+    agility_terrain/    # C2 — gap crossing config + safe base height wrapper
+    multi_task/         # unified multi-task env (in progress)
+  rewards/              # custom reward terms (stand_terms, safe_base_height)
+
+scripts/
+  train.py              # training entry point (PPO via rsl_rl)
+  visualize.py          # headless video recording + live playback
+  evaluate.py           # evaluation / metrics collection
+  plot_learning_curves.py
+
+benchmark/              # multi-task benchmark layer
+  interface.py          # standard Gym wrapper
+  task_sampler.py       # multi-task episode sampling
+  metrics.py            # success rate, transfer metrics
+
+analysis/               # post-hoc analysis scripts
+  compare.py            # single-task vs multi-task
+  transfer.py           # cross-family transfer
+  reward_sensitivity.py
+
+docs/
+  task_family_plan.md   # task definitions, reward spec, success condition
+  eval_protocol.md      # evaluation protocol spec
+
+videos/                 # recorded evaluation clips (per task)
+logs/                   # rsl_rl training checkpoints (gitignored)
 ```
+
+---
 
 ## Quick start
 
 ```bash
-# 1. clone & enter
-git clone <repo-url> && cd bsc-thesis-multi-task-RL-env
+# activate Isaac Lab conda env
+conda activate env_isaaclab
 
-# 2. install (editable, inside an Isaac Lab conda/venv)
-pip install -e .
+# train a single task (example: C2 gap crossing)
+C:\...\isaaclab.bat -p scripts/train.py \
+  --task MTL-Custom-Gap-Unitree-Go2-C2-v0 \
+  --headless --num_envs 1024 --max_iterations 1500 \
+  --plot_learning_curves
 
-# 3. train (example)
-python scripts/train.py --config configs/training/ppo_flat.yaml
-
-# 4. evaluate
-python scripts/evaluate.py --config configs/eval/scaling_test.yaml
+# record a video of a trained checkpoint
+C:\...\isaaclab.bat -p scripts/visualize.py \
+  --task MTL-Custom-Gap-Unitree-Go2-C2-Play-v0 \
+  --checkpoint logs/rsl_rl/unitree_go2_rough/<run>/model_1500.pt \
+  --video --video_length 500 --headless --enable_cameras \
+  --follow --deterministic_eval
 ```
 
-## Phases overview
+---
 
-| Phase | Focus | Key deliverable |
-|-------|-------|-----------------|
-| 1 | Task space (3 families x 2-3 tasks) | `envs/families/` |
-| 2 | Std interface (obs, act, rew, success) | `envs/` + `benchmark/` |
-| 3 | Eval protocol (scaling, Task ID, success) | `scripts/` + `configs/eval/` |
-| 4 | Analysis (single vs multi, transfer, reward) | `analysis/` |
+## Research questions
+
+- **RQ1:** Does a unified multi-task policy match specialist single-task policies on each terrain?
+- **RQ2:** Does training across terrain families produce positive cross-family transfer?
