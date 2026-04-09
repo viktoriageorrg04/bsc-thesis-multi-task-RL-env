@@ -1,30 +1,31 @@
-"""unified multi-task env config: all 5 terrain types in one TerrainGeneratorCfg
+"""Unified multi-task env config: 4 terrain types in one TerrainGeneratorCfg.
 
-  - flat: fast omni-dir walking
-  - random_rough: moderate omni-dir walking
-  - pyramid_stairs: forward-biased stair climbing
-  - stepping_stones: slow, precise forward stepping
-  - gap: moderate forward gap crossing
+  - flat: fast omni-dir walking (fam A)
+  - random_rough: moderate omni-dir walking (fam B1)
+  - pyramid_stairs: forward-biased stair climbing (fam B2)
+  - gap: moderate forward gap crossing (fam C2)
 
-the shared reward function is identical to single-task envs (aka velocity
-tracking + regularization), so any performance difference vs. baselines
-is attributable to the multi-task training regime
+The shared reward function uses the B1-proven set (track_vel + feet_air_time +
+orientation + height + torques + contacts).  Any performance difference vs.
+single-task baselines is attributable to the multi-task training regime.
 """
 
 import copy
 import math
 
+import isaaclab.envs.mdp as core_mdp
 import isaaclab.terrains as terrain_gen
+from isaaclab.managers import RewardTermCfg as RewTerm
+from isaaclab.managers import SceneEntityCfg
 from isaaclab.terrains import TerrainGeneratorCfg
 from isaaclab.utils import configclass
 from isaaclab_tasks.manager_based.locomotion.velocity.config.go2.rough_env_cfg import (
     UnitreeGo2RoughEnvCfg,
 )
 
-# terrain gen: 5 sub-terrains, equal proportion
-# - flat is included so the multi-task policy also sees the baseline terrain
-# - proportions are equal (0.2) so each terrain type gets the same share of envs
-# - difficulty scaling is handled per-row by Isaac Lab's curriculum sys
+# ── terrain generator ──────────────────────────────────────────────────────────
+# 4 sub-terrains, equal 25% proportion.  Difficulty ranges match single-task
+# baselines so the multi-task policy faces equivalent challenges.
 
 _MTL_TERRAIN_GEN = TerrainGeneratorCfg(
     size=(8.0, 8.0),
@@ -39,58 +40,90 @@ _MTL_TERRAIN_GEN = TerrainGeneratorCfg(
     sub_terrains={
         # flat ground (fam A baseline)
         "flat": terrain_gen.HfRandomUniformTerrainCfg(
-            proportion=0.2,
-            noise_range=(0.0, 0.0),  # zero noise = flat
+            proportion=0.25,
+            noise_range=(0.0, 0.0),
             noise_step=0.01,
             border_width=0.25,
         ),
-        # random rough (fam B1)
+        # random rough (fam B1) — matches Go2 rough env scaling
         "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
-            proportion=0.2,
-            noise_range=(0.01, 0.06),  # Go2-scaled (same as UnitreeGo2RoughEnvCfg)
+            proportion=0.25,
+            noise_range=(0.01, 0.06),
             noise_step=0.01,
             border_width=0.25,
         ),
-        # pyramid stairs (fam B2)
+        # pyramid stairs (fam B2) — matches Go2-scaled step heights
         "pyramid_stairs": terrain_gen.MeshPyramidStairsTerrainCfg(
-            proportion=0.2,
-            step_height_range=(0.05, 0.23),
+            proportion=0.25,
+            step_height_range=(0.04, 0.16),
             step_width=0.3,
             platform_width=3.0,
             border_width=1.0,
             holes=False,
         ),
-        # stepping stones (fam C1)
-        "stepping_stones": terrain_gen.HfSteppingStonesTerrainCfg(
-            proportion=0.2,
-            stone_height_max=0.08,
-            stone_width_range=(0.25, 0.45),
-            stone_distance_range=(0.05, 0.12),
-            holes_depth=-10.0,
-            platform_width=1.5,
-        ),
-        # gap crossing (fam C2)
+        # gap crossing (fam C2) — matches single-task gap config
         "gap": terrain_gen.MeshGapTerrainCfg(
-            proportion=0.2,
-            gap_width_range=(0.08, 0.25),
-            platform_width=1.5,
+            proportion=0.25,
+            gap_width_range=(0.0, 0.20),
+            platform_width=2.0,
         ),
     },
 )
 
 
+# ── reward fixes ───────────────────────────────────────────────────────────────
+
+def _apply_mtl_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
+    """B1-proven reward set shared across all terrains in the unified env."""
+    rw = cfg.rewards
+
+    # velocity tracking (stronger than Go2 defaults)
+    rw.track_lin_vel_xy_exp.weight = 2.0
+    rw.track_ang_vel_z_exp.weight = 1.0
+
+    # stepping incentive (Go2 default is 0.01 — kills stepping)
+    rw.feet_air_time.weight = 0.25
+
+    # penalize thigh + calf ground contacts
+    rw.undesired_contacts = RewTerm(
+        func=core_mdp.undesired_contacts,
+        weight=-1.0,
+        params={
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*_thigh", ".*_calf"]),
+            "threshold": 1.0,
+        },
+    )
+
+    # upright posture
+    rw.flat_orientation_l2 = RewTerm(func=core_mdp.flat_orientation_l2, weight=-5.0)
+
+    # terrain-relative base height
+    rw.base_height = RewTerm(
+        func=core_mdp.base_height_l2,
+        weight=-10.0,
+        params={
+            "target_height": 0.38,
+            "asset_cfg": SceneEntityCfg("robot"),
+            "sensor_cfg": SceneEntityCfg("height_scanner"),
+        },
+    )
+
+    # lighter torque penalty (Go2 default -2e-4 is 20x too heavy)
+    rw.dof_torques_l2.weight = -1.0e-5
+
+
+# ── env configs ────────────────────────────────────────────────────────────────
+
 @configclass
 class Go2MultiTaskEnvCfg(UnitreeGo2RoughEnvCfg):
-    """unified multi-task env: 5 terrain types × shared cmd profile
+    """Unified multi-task env: 4 terrain types x shared cmd profile.
 
-    inerits from ``UnitreeGo2RoughEnvCfg`` to get:
-      - Go2-scaled actuators, rewards, height scanner, contact sensors
+    Inherits from UnitreeGo2RoughEnvCfg to get:
+      - Go2-scaled actuators, height scanner, contact sensors
       - terrain curriculum
 
-    the cmd distribution is the union of all single-task profiles:
-      lin_vel_x in [-1.0, 1.0]
-      lin_vel_y in [-1.0, 1.0]
-      heading   in [-pi, pi]
+    The cmd distribution is the union of all single-task profiles:
+      lin_vel_x in [-1.0, 1.0], lin_vel_y in [-1.0, 1.0], heading in [-pi, pi]
     """
 
     def __post_init__(self):
@@ -98,7 +131,10 @@ class Go2MultiTaskEnvCfg(UnitreeGo2RoughEnvCfg):
 
         self.scene.terrain.terrain_generator = copy.deepcopy(_MTL_TERRAIN_GEN)
 
-        # cmds (union of all task profiles)
+        # B1-proven reward set
+        _apply_mtl_rewards(self)
+
+        # commands (union of all single-task profiles)
         cmd = self.commands.base_velocity
         cmd.heading_command = True
         cmd.rel_heading_envs = 1.0
@@ -111,21 +147,17 @@ class Go2MultiTaskEnvCfg(UnitreeGo2RoughEnvCfg):
 
 @configclass
 class Go2MultiTaskEnvCfg_PLAY(Go2MultiTaskEnvCfg):
-    """lightweight play/vis variant for the unified multi-task env"""
+    """Lightweight play/vis variant for the unified multi-task env."""
 
     def __post_init__(self):
         super().__post_init__()
-        # small scene for interactive vis
         self.scene.num_envs = 50
         self.scene.env_spacing = 2.5
-        # spread robots randomly across terrain types instead of curriculum
-        self.scene.terrain.max_init_terrain_level = None
-        # fewer terrain patches to save GPU memory during vis
+        self.scene.terrain.max_init_terrain_level = 6
         if self.scene.terrain.terrain_generator is not None:
             self.scene.terrain.terrain_generator.num_rows = 5
             self.scene.terrain.terrain_generator.num_cols = 5
             self.scene.terrain.terrain_generator.curriculum = False
-        # deterministic
         self.observations.policy.enable_corruption = False
         self.events.base_external_force_torque = None
         self.events.push_robot = None

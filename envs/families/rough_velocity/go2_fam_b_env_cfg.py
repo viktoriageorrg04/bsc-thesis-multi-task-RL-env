@@ -154,6 +154,7 @@ class Go2B1RoughWalkEnvCfg_PLAY(Go2B1RoughWalkEnvCfg):
         super().__post_init__()
         self.scene.num_envs = 50
         self.scene.env_spacing = 2.5
+        self.scene.terrain.max_init_terrain_level = 5  # adjust at your liking
         self.observations.policy.enable_corruption = False
         self.events.base_external_force_torque = None
         self.events.push_robot = None
@@ -167,6 +168,7 @@ class Go2B2StairClimbEnvCfg_PLAY(Go2B2StairClimbEnvCfg):
         super().__post_init__()
         self.scene.num_envs = 50
         self.scene.env_spacing = 2.5
+        self.scene.terrain.max_init_terrain_level = 6  # adjust at your liking
         self.observations.policy.enable_corruption = False
         self.events.base_external_force_torque = None
         self.events.push_robot = None
