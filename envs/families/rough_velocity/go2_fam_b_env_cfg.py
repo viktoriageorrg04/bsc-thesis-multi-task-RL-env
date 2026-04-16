@@ -99,49 +99,136 @@ class Go2B1RoughWalkEnvCfg(UnitreeGo2RoughEnvCfg):
         _fix_rough_reward_shaping(self)
 
 
+# @configclass
+# class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
+#     """fam B / task B2: stair climb on pyramid_stairs terrain only.
+
+#     Built on the proven Isaac Lab Go2 rough-velocity defaults with MINIMAL
+#     changes.  Does NOT call _fix_rough_reward_shaping — that function
+#     overrode Go2-tuned penalties (dof_torques 20x lighter, feet_air_time
+#     25x heavier) which produced bad gaits on stairs.
+#     """
+
+#     def __post_init__(self):
+#         super().__post_init__()
+#         _keep_single_sub_terrain(self, "pyramid_stairs")
+
+#         # scale down stair height for Go2
+#         stairs = self.scene.terrain.terrain_generator.sub_terrains["pyramid_stairs"]
+#         # stairs.step_height_range = (0.04, 0.16)
+#         stairs.step_height_range = (0.03, 0.12)
+#         self.scene.terrain.max_init_terrain_level = 1
+
+#         # B2 is forward-biased with low lateral/yaw commands.
+#         cmd = self.commands.base_velocity
+#         cmd.heading_command = False
+#         cmd.rel_heading_envs = 0.0
+#         cmd.rel_standing_envs = 0.0
+#         cmd.ranges.lin_vel_x = (0.3, 0.8)
+#         # cmd.ranges.lin_vel_y = (-0.15, 0.15)
+#         # cmd.ranges.ang_vel_z = (-0.3, 0.3)
+#         cmd.ranges.lin_vel_y = (-0.05, 0.05)
+#         cmd.ranges.ang_vel_z = (-0.1, 0.1)
+#         cmd.ranges.heading = (0.0, 0.0)
+
+#         rw = self.rewards
+
+#         # posture: mild orientation penalty to discourage crawling
+#         # annealed via --posture_reward_anneal (strong early, decays to this)
+#         # rw.flat_orientation_l2.weight = -1.0
+#         rw.flat_orientation_l2.weight = -1.5
+
+#         # terrain-relative height target so the robot doesn't belly-flop
+#         # annealed via --posture_reward_anneal
+#         rw.base_height = RewTerm(
+#             func=core_mdp.base_height_l2,
+#             # weight=-2.0,
+#             weight=-1.5,
+#             params={
+#                 "target_height": 0.37,
+#                 "asset_cfg": SceneEntityCfg("robot"),
+#                 "sensor_cfg": SceneEntityCfg("height_scanner"),
+#             },
+#         )
+        
+#         # mild stepping/contact shaping for stair ascent
+#         rw.feet_air_time.weight = 0.08
+#         rw.undesired_contacts = RewTerm(
+#             func=core_mdp.undesired_contacts,
+#             weight=-0.5,
+#             params={
+#                 "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*_thigh", ".*_calf"]),
+#                 "threshold": 1.0,
+#             },
+#         )
+
 @configclass
 class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
-    """fam B / task B2: stair climb on pyramid_stairs terrain only.
-
-    Built on the proven Isaac Lab Go2 rough-velocity defaults with MINIMAL
-    changes.  Does NOT call _fix_rough_reward_shaping — that function
-    overrode Go2-tuned penalties (dof_torques 20x lighter, feet_air_time
-    25x heavier) which produced bad gaits on stairs.
-    """
+    """fam B / task B2: stair climb on stairs only (climb-focused)."""
 
     def __post_init__(self):
         super().__post_init__()
-        _keep_single_sub_terrain(self, "pyramid_stairs")
 
-        # scale down stair height for Go2
-        stairs = self.scene.terrain.terrain_generator.sub_terrains["pyramid_stairs"]
-        stairs.step_height_range = (0.04, 0.16)
+        # use inverted stairs only (forward ~= uphill from spawn)
+        gen = copy.deepcopy(self.scene.terrain.terrain_generator)
+        gen.sub_terrains = {
+            "pyramid_stairs_inv": gen.sub_terrains["pyramid_stairs_inv"],
+        }
+        gen.sub_terrains["pyramid_stairs_inv"].proportion = 1.0
+        gen.sub_terrains["pyramid_stairs_inv"].step_height_range = (0.04, 0.16)
+        self.scene.terrain.terrain_generator = gen
 
-        # B2 is forward-biased with low lateral/yaw commands.
+        # easier curriculum start
+        self.scene.terrain.max_init_terrain_level = 1
+
+        # straight-forward only
         cmd = self.commands.base_velocity
         cmd.heading_command = False
         cmd.rel_heading_envs = 0.0
         cmd.rel_standing_envs = 0.0
-        cmd.ranges.lin_vel_x = (0.3, 0.8)
-        cmd.ranges.lin_vel_y = (-0.15, 0.15)
-        cmd.ranges.ang_vel_z = (-0.3, 0.3)
+        cmd.ranges.lin_vel_x = (0.4, 0.9)
+        cmd.ranges.lin_vel_y = (0.0, 0.0)
+        cmd.ranges.ang_vel_z = (0.0, 0.0)
         cmd.ranges.heading = (0.0, 0.0)
 
+        # keep reset heading close to forward
+        self.events.reset_base.params["pose_range"]["yaw"] = (-0.2, 0.2)
+
         rw = self.rewards
+        # rw.flat_orientation_l2.weight = -1.2
+        rw.flat_orientation_l2.weight = -2.0
 
-        # posture: mild orientation penalty to discourage crawling
-        # annealed via --posture_reward_anneal (strong early, decays to this)
-        rw.flat_orientation_l2.weight = -1.0
-
-        # terrain-relative height target so the robot doesn't belly-flop
-        # annealed via --posture_reward_anneal
         rw.base_height = RewTerm(
             func=core_mdp.base_height_l2,
-            weight=-2.0,
+            # weight=-1.5,
+            weight=-3.8,
             params={
-                "target_height": 0.37,
+                "target_height": 0.43,
                 "asset_cfg": SceneEntityCfg("robot"),
                 "sensor_cfg": SceneEntityCfg("height_scanner"),
+            },
+        )
+
+        # discourage extreme joint angles
+        rw.dof_pos_limits.weight = -1.0
+
+        # recover bigger trot steps
+        # rw.feet_air_time.weight = 0.04
+        rw.feet_air_time.weight = 0.016
+        # rw.feet_air_time.params["threshold"] = 0.35
+        rw.feet_air_time.params["threshold"] = 0.18
+        # rw.dof_torques_l2.weight = -5.0e-5
+        rw.dof_torques_l2.weight = -3.0e-5
+        # rw.action_rate_l2.weight = -0.005
+        rw.dof_acc_l2.weight = -5.0e-7
+        rw.action_rate_l2.weight = -0.0022
+
+        rw.undesired_contacts = RewTerm(
+            func=core_mdp.undesired_contacts,
+            weight=-0.45,
+            params={
+                "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*_thigh", ".*_calf"]),
+                "threshold": 1.0,
             },
         )
 
@@ -168,7 +255,7 @@ class Go2B2StairClimbEnvCfg_PLAY(Go2B2StairClimbEnvCfg):
         super().__post_init__()
         self.scene.num_envs = 50
         self.scene.env_spacing = 2.5
-        self.scene.terrain.max_init_terrain_level = 6  # adjust at your liking
+        # self.scene.terrain.max_init_terrain_level = 6  # adjust at your liking
         self.observations.policy.enable_corruption = False
         self.events.base_external_force_torque = None
         self.events.push_robot = None

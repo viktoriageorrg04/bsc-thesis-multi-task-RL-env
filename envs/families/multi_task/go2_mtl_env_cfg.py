@@ -12,6 +12,7 @@ single-task baselines is attributable to the multi-task training regime.
 
 import copy
 import math
+import torch
 
 import isaaclab.envs.mdp as core_mdp
 import isaaclab.terrains as terrain_gen
@@ -73,6 +74,29 @@ _MTL_TERRAIN_GEN = TerrainGeneratorCfg(
 
 # ── reward fixes ───────────────────────────────────────────────────────────────
 
+def _safe_base_height_l2(
+    env,
+    target_height: float,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    sensor_cfg: SceneEntityCfg | None = None,
+) -> torch.Tensor:
+    """base_height_l2 with finite-safe ray handling for mixed terrains (incl. gaps)."""
+    asset = env.scene[asset_cfg.name]
+    if sensor_cfg is not None:
+        sensor = env.scene[sensor_cfg.name]
+        ray_z = sensor.data.ray_hits_w[..., 2]
+        valid = torch.isfinite(ray_z)
+        ray_z_clean = torch.where(valid, ray_z, torch.zeros_like(ray_z))
+        valid_count = valid.float().sum(dim=1).clamp(min=1.0)
+        ground_z = ray_z_clean.sum(dim=1) / valid_count
+        all_invalid = ~valid.any(dim=1)
+        ground_z[all_invalid] = asset.data.root_pos_w[all_invalid, 2] - target_height
+        adjusted_target = target_height + ground_z
+    else:
+        adjusted_target = target_height
+    return torch.square(asset.data.root_pos_w[:, 2] - adjusted_target)
+
+
 def _apply_mtl_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
     """B1-proven reward set shared across all terrains in the unified env."""
     rw = cfg.rewards
@@ -99,7 +123,7 @@ def _apply_mtl_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
 
     # terrain-relative base height
     rw.base_height = RewTerm(
-        func=core_mdp.base_height_l2,
+        func=_safe_base_height_l2,
         weight=-10.0,
         params={
             "target_height": 0.38,

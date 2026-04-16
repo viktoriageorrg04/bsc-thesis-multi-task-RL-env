@@ -69,6 +69,27 @@ from envs.success import (
     compute_step_success_from_errors,
 )
 
+
+def _load_runner_checkpoint_compat(runner: OnPolicyRunner, checkpoint_path: str) -> None:
+    """Load checkpoint with compatibility fallback for std/log-std key rename."""
+    try:
+        runner.load(checkpoint_path)
+        return
+    except RuntimeError as exc:
+        message = str(exc)
+        std_schema_mismatch = (
+            "distribution.std_param" in message and "distribution.log_std_param" in message
+        )
+        if not std_schema_mismatch:
+            raise
+
+        print(
+            "[WARN] Checkpoint uses different distribution std schema "
+            "(std_param vs log_std_param). Retrying non-strict load for inference."
+        )
+        runner.load(checkpoint_path, strict=False)
+
+
 # the 5 single-task eval envs
 EVAL_TASK_IDS = (
     "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0",
@@ -192,7 +213,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     installed_version = metadata.version("rsl-rl-lib")
     agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, installed_version)
     runner = OnPolicyRunner(wrapped, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
-    runner.load(args_cli.checkpoint)
+    _load_runner_checkpoint_compat(runner, args_cli.checkpoint)
     policy = runner.get_inference_policy(device=device)
 
     train_obs_dim = env.unwrapped.observation_manager.group_obs_dim["policy"][0]

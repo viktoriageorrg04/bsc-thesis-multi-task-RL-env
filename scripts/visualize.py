@@ -46,6 +46,26 @@ from isaaclab_rl.rsl_rl.utils import handle_deprecated_rsl_rl_cfg
 from rsl_rl.runners import OnPolicyRunner
 
 
+def _load_runner_checkpoint_compat(runner: OnPolicyRunner, checkpoint_path: str) -> None:
+    """Load checkpoint with compatibility fallback for std/log-std key rename."""
+    try:
+        runner.load(checkpoint_path)
+        return
+    except RuntimeError as exc:
+        message = str(exc)
+        std_schema_mismatch = (
+            "distribution.std_param" in message and "distribution.log_std_param" in message
+        )
+        if not std_schema_mismatch:
+            raise
+
+        print(
+            "[WARN] Checkpoint uses different distribution std schema "
+            "(std_param vs log_std_param). Retrying non-strict load for inference."
+        )
+        runner.load(checkpoint_path, strict=False)
+
+
 @hydra_task_config(args_cli.task, "rsl_rl_cfg_entry_point")
 def main(env_cfg, agent_cfg):
     env_cfg.scene.num_envs = args_cli.num_envs or env_cfg.scene.num_envs
@@ -98,7 +118,7 @@ def main(env_cfg, agent_cfg):
         installed_version = metadata.version("rsl-rl-lib")
         agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, installed_version)
         runner = OnPolicyRunner(wrapped, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
-        runner.load(args_cli.checkpoint)
+        _load_runner_checkpoint_compat(runner, args_cli.checkpoint)
         policy = runner.get_inference_policy(device=env.unwrapped.device)
         print(f"[INFO] Loaded policy from: {args_cli.checkpoint}")
         obs = wrapped.get_observations()

@@ -26,10 +26,10 @@ _ROUGH_ROOT = os.path.join(_PROJ, "logs", "rsl_rl", "unitree_go2_rough")
 #   A1 uniquely logs Episode_Reward/stand_still.
 #   A2 has neither stand_still nor undesired_contacts (unlike B1/B2/C2).
 TASKS = {
-    "A1": {"play_id": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-Play-v0", "log_dir":  os.path.join(_ROUGH_ROOT, "2026-04-09_01-42-49"), "follow": False, "eye": [1, -5, 3], "lookat": [1, 0, 0]},
-    "A2": {"play_id": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-Play-v0", "log_dir": os.path.join(_ROUGH_ROOT, "2026-04-09_11-10-20"), "follow": False, "eye": [0, -5, 3], "lookat": [0, 0, 0]},
-    # "A1": {"play_id": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-Play-v0", "log_dir":  os.path.join(_ROUGH_ROOT, "2026-04-09_01-42-49"), "follow": True, "eye": [1, -5, 3], "lookat": [1, 0, 0]},
-    # "A2": {"play_id": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-Play-v0", "log_dir": os.path.join(_ROUGH_ROOT, "2026-04-09_11-10-20"), "follow": True, "eye": [0, -5, 3], "lookat": [0, 0, 0]},
+    # Use follow-camera for flat tasks too; static world camera can drift off-subject
+    # and produce sky/blue-only clips in some runs.
+    "A1": {"play_id": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-Play-v0", "log_dir":  os.path.join(_ROUGH_ROOT, "2026-04-09_01-42-49"), "follow": True, "eye": [1, -5, 3], "lookat": [1, 0, 0]},
+    "A2": {"play_id": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-Play-v0", "log_dir": os.path.join(_ROUGH_ROOT, "2026-04-09_11-10-20"), "follow": True, "eye": [0, -5, 3], "lookat": [0, 0, 0]},
     "B1": {"play_id": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-Play-v0", "log_dir":  os.path.join(_ROUGH_ROOT, "2026-03-31_17-54-23"), "follow": True},
     "B2": {"play_id": "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-Play-v0", "log_dir":  os.path.join(_ROUGH_ROOT, "2026-04-01_23-15-56"), "follow": True},
     "C2": {"play_id": "MTL-Custom-Gap-Unitree-Go2-C2-Play-v0", "log_dir":  os.path.join(_ROUGH_ROOT, "2026-04-08_19-51-57"), "follow": True},
@@ -107,7 +107,7 @@ def main():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--task", type=str, choices=list(TASKS.keys()), help="Short task name (A1, A2, B1, B2, C2).")
     group.add_argument("--all", action="store_true", help="Record videos for all 5 tasks.")
-    parser.add_argument("--num_envs", type=int, default=5, help="Number of environments (default: 5).")
+    parser.add_argument("--num_envs", type=int, default=1, help="Number of environments (default: 1).")
     parser.add_argument("--video_length", type=int, default=500, help="Video length in steps (default: 500).")
     args = parser.parse_args()
 
