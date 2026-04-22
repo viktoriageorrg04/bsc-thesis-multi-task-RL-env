@@ -12,7 +12,7 @@ This document defines how evaluation is run and how matrix outputs are represent
   - `C2_gap`
 - Each trained policy is evaluated on all 5 tasks (cross-eval row).
 
-## Standard command
+## Standard Command
 
 Run cross-eval for one trained checkpoint:
 
@@ -29,7 +29,7 @@ bash scripts/cross_eval.sh \
   64 256
 ```
 
-## Output artifacts
+## Output Artifacts
 
 For a policy trained on `A1_forward`:
 
@@ -44,9 +44,9 @@ For a policy trained on `A1_forward`:
 
 `summary.json` is the canonical row-level matrix representation for that trained policy.
 
-## Matrix representation
+## Matrix Representation
 
-### Row-level matrix (single trained policy)
+### Row-Level Matrix (Single Trained Policy)
 
 `results/<train_short>/summary.json` maps:
 
@@ -55,7 +55,7 @@ For a policy trained on `A1_forward`:
 
 This is a 1x5 matrix row for the given trained policy.
 
-### Full matrix (multiple trained policies)
+### Full Matrix (Multiple Trained Policies)
 
 When you run cross-eval for multiple trained policies, each policy adds one row directory:
 
@@ -78,7 +78,7 @@ Generated files:
 - `results/matrix_success_rate.json`
 - `results/matrix_success_rate_heatmap.png` (if `matplotlib` is available)
 
-## Required reported metrics
+## Required Reported Metrics
 
 At minimum:
 
@@ -90,7 +90,30 @@ At minimum:
 - `mean_ang_vel_error`
 - `num_episodes`
 
+## Phase-Based Model Selection (Current Practice)
+
+For phased MTL training, evaluate checkpoints during each phase and select by task-specific targets instead of using only the final checkpoint.
+
+Selection priorities:
+
+1. Phase 0 and Phase 3 (rough retention focus)
+- Primary: `B1_rough.success_rate`
+- Gate: keep `B1_rough.success_rate >= 0.933`
+- Hard warning: repeated evals below `0.903` or `B1_rough.failure_rate > 0.10`
+
+2. Phase 1 (stairs rehearsal)
+- Primary: improve `B2_stairs.success_rate` while keeping B1 above retention gate
+
+3. Phase 2 (gap rehearsal)
+- Primary: improve `C2_gap.success_rate` while keeping B1 above retention gate
+
+Practical cadence:
+
+- Run cross-eval every 50 training iterations (or every checkpoint save interval).
+- Use two consecutive healthy evals before phase handoff.
+
 ## Notes
 
 - Cross-eval is executed per task in separate processes (safer with IsaacLab than in-process task switching).
 - `summary.json` is merged incrementally during `cross_eval.sh` runs.
+- Mean training reward is useful for trend monitoring, but phase handoff decisions should be based on cross-eval metrics.

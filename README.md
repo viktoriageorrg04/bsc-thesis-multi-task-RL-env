@@ -1,90 +1,84 @@
 # Multi-Task RL Locomotion Benchmark
 
-BSc Thesis — Data Science and AI
-**Author:** Viktoria Georgieva
+BSc Thesis - Data Science and AI  
+Author: Viktoria Georgieva
 
-Multi-task reinforcement learning for quadruped locomotion on the **Unitree Go2**,
+Multi-task reinforcement learning for quadruped locomotion on the Unitree Go2,
 built on [Isaac Lab](https://isaac-sim.github.io/IsaacLab/) with rsl_rl PPO.
 
----
+## Current Development (April 2026)
+
+- Single-task baselines for A1, A2, B1, B2, C2 are implemented and cross-evaluated.
+- Unified MTL environment `MTL-Unified-Unitree-Go2-AllTerrains-v0` is active via `scripts/mtl_train.py`.
+- Current finding: pure `uniform` terrain sampling often hurts specialist retention.
+- Preferred strategy: phased `focus` sampling with rehearsal, plus explicit B1 retention gates.
+
+See:
+
+- [Task inventory and env IDs](docs/task_family_plan.md)
+- [Evaluation protocol](docs/eval_protocol.md)
+- [MTL phase playbook and retention thresholds](docs/mtl_phase_playbook.md)
 
 ## Tasks
 
 5 single-task baselines across 3 terrain families:
 
-| ID | Task | Terrain | Commands | Status |
-|----|------|---------|----------|--------|
-| A1 | Forward walk | Flat | forward-only `[0.5, 1.0]` m/s
-| A2 | Omni walk | Flat | omnidirectional `±1.0` m/s
-| B1 | Rough walk | Random rough | omnidirectional `±1.0` m/s
-| B2 | Stair climb | Pyramid stairs | forward-biased `[0.3, 0.8]` m/s
-| C2 | Gap crossing | Mesh gaps `0–20 cm` | forward-biased `[0.4, 0.8]` m/s
+| ID | Task | Terrain | Commands |
+|----|------|---------|----------|
+| A1 | Forward walk | Flat | forward-only |
+| A2 | Omni walk | Flat | omnidirectional |
+| B1 | Rough walk | Random rough | omnidirectional |
+| B2 | Stair climb | Inverted pyramid stairs (eval task) | forward-only |
+| C2 | Gap crossing | Mesh gaps (0-20 cm) | forward-biased |
 
 All tasks share a 235-dim observation space (proprioception + height scan) and
-a 12-DoF joint position action space — single policy network is feasible.
+a 12-DoF joint position action space, so one policy can be used for all tasks.
 
----
+## Project Layout
 
-## Project layout
-
-```
+```text
 envs/
   families/
-    flat_velocity/      # A1, A2 — flat terrain configs
-    rough_velocity/     # B1, B2 — rough terrain configs
-    agility_terrain/    # C2 — gap crossing config + safe base height wrapper
-    multi_task/         # unified multi-task env (in progress)
-  rewards/              # custom reward terms (stand_terms, safe_base_height)
+    flat_velocity/      # A1, A2
+    rough_velocity/     # B1, B2
+    agility_terrain/    # C2
+    multi_task/         # unified MTL env
+  rewards/
 
 scripts/
-  train.py              # training entry point (PPO via rsl_rl)
-  visualize.py          # headless video recording + live playback
-  evaluate.py           # evaluation / metrics collection
-  plot_learning_curves.py
-
-benchmark/              # multi-task benchmark layer
-  interface.py          # standard Gym wrapper
-  task_sampler.py       # multi-task episode sampling
-  metrics.py            # success rate, transfer metrics
-
-analysis/               # post-hoc analysis scripts
-  compare.py            # single-task vs multi-task
-  transfer.py           # cross-family transfer
-  reward_sensitivity.py
+  train.py              # single-task + generic train entrypoint
+  mtl_train.py          # unified MTL training entrypoint
+  evaluate.py           # per-policy cross-eval collection
+  cross_eval.sh         # launcher for full 5-task cross-eval
+  export_eval_matrix.py # matrix + heatmap export
+  plot_mtl_phases.py    # concatenated phase learning curves
 
 docs/
-  task_family_plan.md   # task definitions, reward spec, success condition
-  eval_protocol.md      # evaluation protocol spec
-
-videos/                 # recorded evaluation clips (per task)
-logs/                   # rsl_rl training checkpoints (gitignored)
+  task_family_plan.md
+  eval_protocol.md
+  mtl_phase_playbook.md
 ```
 
----
-
-## Quick start
+## Quick Start
 
 ```bash
-# activate Isaac Lab conda env
-conda activate env_isaaclab
-
-# train a single task (example: C2 gap crossing)
-C:\...\isaaclab.bat -p scripts/train.py \
-  --task MTL-Custom-Gap-Unitree-Go2-C2-v0 \
-  --headless --num_envs 1024 --max_iterations 1500 \
-  --plot_learning_curves
-
-# record a video of a trained checkpoint
-C:\...\isaaclab.bat -p scripts/visualize.py \
-  --task MTL-Custom-Gap-Unitree-Go2-C2-Play-v0 \
-  --checkpoint logs/rsl_rl/unitree_go2_rough/<run>/model_1500.pt \
-  --video --video_length 500 --headless --enable_cameras \
-  --follow --deterministic_eval
+# Train unified MTL with rough-focused sampling (recommended phase-0 style)
+C:\...\isaaclab.bat -p scripts/mtl_train.py \
+  --task MTL-Unified-Unitree-Go2-AllTerrains-v0 \
+  --headless --num_envs 512 \
+  --sampling_strategy focus --focus_terrain rough --focus_prob 0.75 \
+  --pretrained_checkpoint logs/rsl_rl/unitree_go2_rough/<run>/model_1499.pt
 ```
 
----
+```bash
+# Cross-evaluate one checkpoint on all 5 benchmark tasks
+bash scripts/cross_eval.sh \
+  MTL-Unified-Unitree-Go2-AllTerrains-v0 \
+  logs/rsl_rl/<experiment>/<run>/model_<iter>.pt \
+  64 256
+```
 
-## Research questions
+## Research Questions
 
-- **RQ1:** Does a unified multi-task policy match specialist single-task policies on each terrain?
-- **RQ2:** Does training across terrain families produce positive cross-family transfer?
+- RQ1: Does a unified multi-task policy match specialist single-task policies on each terrain?
+- RQ2: Does training across terrain families produce positive cross-family transfer?
