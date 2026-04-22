@@ -11,6 +11,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import importlib.metadata as metadata
 import os
 import random
@@ -93,7 +94,7 @@ def _build_terrain_sampling_proportions(
     return proportions
 
 
-def _apply_terrain_sampling_profile(env_cfg: ManagerBasedRLEnvCfg, args) -> None:
+def _apply_terrain_sampling_profile(env_cfg: ManagerBasedRLEnvCfg, args) -> dict[str, float]:
     """Apply terrain sampling profile directly to the unified MTL terrain generator."""
     terrain_cfg = getattr(getattr(env_cfg, "scene", None), "terrain", None)
     terrain_gen = getattr(terrain_cfg, "terrain_generator", None)
@@ -118,6 +119,7 @@ def _apply_terrain_sampling_profile(env_cfg: ManagerBasedRLEnvCfg, args) -> None
 
     pretty = ", ".join(f"{k}={proportions[k]:.3f}" for k in sorted(proportions))
     print(f"[INFO] Terrain sampling profile ({args.sampling_strategy}): {pretty}")
+    return proportions
 
 
 def _read_scalar_series(log_dir: str, tag: str) -> tuple[np.ndarray, np.ndarray] | None:
@@ -150,6 +152,39 @@ def _moving_average(values: np.ndarray, window: int) -> np.ndarray:
 
 def _safe_tag_name(tag: str) -> str:
     return tag.replace("/", "_").replace(" ", "_")
+
+
+def _list_checkpoint_iters(log_dir: str) -> list[int]:
+    ckpts = glob(os.path.join(log_dir, "model_*.pt"))
+    iters: list[int] = []
+    for path in ckpts:
+        base = os.path.basename(path)
+        try:
+            iters.append(int(base.replace("model_", "").replace(".pt", "")))
+        except ValueError:
+            continue
+    return sorted(set(iters))
+
+
+def _best_checkpoint_by_reward(log_dir: str, steps: np.ndarray, values: np.ndarray) -> tuple[int, float] | None:
+    ckpt_iters = _list_checkpoint_iters(log_dir)
+    if not ckpt_iters or steps.size == 0 or values.size == 0:
+        return None
+
+    best_iter = None
+    best_reward = None
+    for ckpt_it in ckpt_iters:
+        idx = np.searchsorted(steps, ckpt_it, side="right") - 1
+        if idx < 0:
+            continue
+        reward = float(values[idx])
+        if best_reward is None or reward > best_reward:
+            best_reward = reward
+            best_iter = ckpt_it
+
+    if best_iter is None or best_reward is None:
+        return None
+    return best_iter, best_reward
 
 
 def _export_learning_curves(log_dir: str, tags: list[str], smoothing: int) -> None:
@@ -187,6 +222,20 @@ def _export_learning_curves(log_dir: str, tags: list[str], smoothing: int) -> No
         smoothed = _moving_average(values, smoothing)
         ax.plot(steps, values, linewidth=1.0, alpha=0.3, label="raw")
         ax.plot(steps, smoothed, linewidth=2.0, label=f"ma({max(1, smoothing)})")
+        if tag == "Train/mean_reward":
+            best = _best_checkpoint_by_reward(log_dir, steps, values)
+            if best is not None:
+                best_iter, best_reward = best
+                ax.axvline(best_iter, color="tab:red", linestyle="--", linewidth=1.6, label="best ckpt")
+                ax.scatter([best_iter], [best_reward], color="tab:red", s=25, zorder=4)
+                ax.annotate(
+                    f"best: model_{best_iter}.pt ({best_reward:.2f})",
+                    xy=(best_iter, best_reward),
+                    xytext=(8, 8),
+                    textcoords="offset points",
+                    fontsize=8,
+                    color="tab:red",
+                )
         ax.set_title(tag)
         ax.set_xlabel("iteration")
         ax.set_ylabel("value")
@@ -290,6 +339,27 @@ def _enable_distribution_safety_patch() -> None:
     GaussianDistribution._bsc_safe_patch_applied = True
 
     print("[INFO] Applied runtime distribution safety patch for rsl_rl Gaussian policies.")
+
+
+def _load_runner_checkpoint_compat(runner: OnPolicyRunner, checkpoint_path: str) -> None:
+    """Load checkpoint with compatibility fallback for std/log-std schema rename."""
+    try:
+        runner.load(checkpoint_path)
+        return
+    except RuntimeError as exc:
+        message = str(exc)
+        std_schema_mismatch = (
+            ("distribution.std_param" in message and "distribution.log_std_param" in message)
+            or ("distribution.log_std_param" in message and "distribution.std_param" in message)
+        )
+        if not std_schema_mismatch:
+            raise
+
+        print(
+            "[WARN] Checkpoint uses different distribution std schema "
+            "(std_param vs log_std_param). Retrying non-strict load."
+        )
+        runner.load(checkpoint_path, strict=False)
 
 
 parser = argparse.ArgumentParser(description="Train unified MTL policy with robust defaults.")
@@ -414,7 +484,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
         env_cfg.scene.num_envs = args_cli.num_envs
     if args_cli.max_iterations is not None:
         agent_cfg.max_iterations = args_cli.max_iterations
-    _apply_terrain_sampling_profile(env_cfg, args_cli)
+    sampling_proportions = _apply_terrain_sampling_profile(env_cfg, args_cli)
 
     _apply_mtl_stability_overrides(agent_cfg, args_cli)
 
@@ -473,14 +543,22 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
 
     if resume_path is not None:
         print(f"[INFO] Loading model checkpoint from: {resume_path}")
-        runner.load(resume_path)
+        _load_runner_checkpoint_compat(runner, resume_path)
     elif args_cli.pretrained_checkpoint is not None:
         print(f"[INFO] Loading pretrained weights from: {args_cli.pretrained_checkpoint}")
-        runner.load(args_cli.pretrained_checkpoint)
+        _load_runner_checkpoint_compat(runner, args_cli.pretrained_checkpoint)
         print("[INFO] Pretrained weights loaded. Training starts from iteration 0.")
 
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), agent_cfg)
+    sampling_profile = {
+        "strategy": args_cli.sampling_strategy,
+        "focus_terrain": args_cli.focus_terrain,
+        "focus_prob": float(args_cli.focus_prob),
+        "proportions": {k: float(v) for k, v in sampling_proportions.items()},
+    }
+    with open(os.path.join(log_dir, "params", "sampling_profile.json"), "w", encoding="utf-8") as f:
+        json.dump(sampling_profile, f, indent=2)
 
     runner.learn(num_learning_iterations=int(agent_cfg.max_iterations), init_at_random_ep_len=True)
     if args_cli.plot_learning_curves:

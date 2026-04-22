@@ -5,7 +5,7 @@ checkpoint, trims warmup frames to remove startup jitter, and exports a split-sc
 MP4 for qualitative comparison.
 
 Default 4-way layout:
-    top-left:  A1 flat
+    top-left: A1 flat
     top-right: B1 rough
     bottom-left: B2 stairs
     bottom-right: C2 gap
@@ -47,23 +47,36 @@ TASKS = {
         key="A1",
         label="A1 flat",
         play_id="MTL-Velocity-Flat-Unitree-Go2-A1-Forward-Play-v0",
-        eye=(1.0, -5.0, 3.0),
-        lookat=(1.0, 0.0, 0.0),
+        follow=True,
+        eye=(2.4, -4.8, 1.9),
+    ),
+    "A2": TileTask(
+        key="A2",
+        label="A2 omni",
+        play_id="MTL-Velocity-Flat-Unitree-Go2-A2-Omni-Play-v0",
+        follow=True,
+        eye=(2.4, -4.8, 1.9),
     ),
     "B1": TileTask(
         key="B1",
         label="B1 rough",
         play_id="MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-Play-v0",
+        follow=True,
+        eye=(2.6, -5.2, 2.0),
     ),
     "B2": TileTask(
         key="B2",
         label="B2 stairs",
         play_id="MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-Play-v0",
+        follow=True,
+        eye=(2.8, -5.4, 2.1),
     ),
     "C2": TileTask(
         key="C2",
         label="C2 gap",
         play_id="MTL-Custom-Gap-Unitree-Go2-C2-Play-v0",
+        follow=True,
+        eye=(2.8, -5.6, 2.2),
     ),
 }
 
@@ -88,8 +101,8 @@ def _resolve_isaaclab_bat(project_root: str) -> str:
     return "isaaclab.bat"
 
 
-def _latest_video_for_task(project_root: str, play_id: str) -> str:
-    video_dir = os.path.join(project_root, "videos", play_id)
+def _latest_video_for_task(video_base_dir: str, play_id: str) -> str:
+    video_dir = os.path.join(video_base_dir, play_id)
     files = glob.glob(os.path.join(video_dir, "*.mp4"))
     if not files:
         raise FileNotFoundError(f"No mp4 videos found under: {video_dir}")
@@ -105,6 +118,7 @@ def _record_task_clip(
     warmup_steps: int,
     num_envs: int,
     device: str | None,
+    recordings_base_dir: str,
 ) -> str:
     if not os.path.isfile(checkpoint):
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint}")
@@ -116,7 +130,7 @@ def _record_task_clip(
     before_latest = None
     before_mtime = -1.0
     try:
-        before_latest = _latest_video_for_task(project_root, task.play_id)
+        before_latest = _latest_video_for_task(recordings_base_dir, task.play_id)
         before_mtime = os.path.getmtime(before_latest)
     except FileNotFoundError:
         pass
@@ -147,13 +161,14 @@ def _record_task_clip(
         cmd.extend(["--lookat", str(task.lookat[0]), str(task.lookat[1]), str(task.lookat[2])])
     if device:
         cmd.extend(["--device", device])
+    cmd.extend(["--video_folder", os.path.join(recordings_base_dir, task.play_id)])
 
     print(f"[INFO] Recording {task.label}: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=project_root)
     if result.returncode != 0:
         raise RuntimeError(f"Recording failed for {task.key} with exit code {result.returncode}.")
 
-    latest = _latest_video_for_task(project_root, task.play_id)
+    latest = _latest_video_for_task(recordings_base_dir, task.play_id)
     latest_mtime = os.path.getmtime(latest)
 
     produced_fresh_artifact = False
@@ -278,6 +293,21 @@ def main() -> int:
         default=False,
         help="Skip re-recording and use latest existing mp4 for each task.",
     )
+    parser.add_argument(
+        "--recordings_root",
+        type=str,
+        default=None,
+        help=(
+            "Optional root directory for per-task source recordings. "
+            "If set, clips are stored under <recordings_root>/<recordings_tag>/<play_id>/."
+        ),
+    )
+    parser.add_argument(
+        "--recordings_tag",
+        type=str,
+        default=None,
+        help="Optional subfolder name under recordings_root. Default: <run_name>__<ckpt_name>.",
+    )
     parser.add_argument("--device", type=str, default=None, help="Optional device override (e.g. cuda:0).")
     args = parser.parse_args()
 
@@ -285,19 +315,30 @@ def main() -> int:
     isaaclab_bat = _resolve_isaaclab_bat(project_root)
 
     ckpt_name = os.path.splitext(os.path.basename(args.checkpoint))[0]
+    run_name = os.path.basename(os.path.dirname(os.path.abspath(args.checkpoint)))
+    if args.recordings_root:
+        recordings_root = args.recordings_root
+        if not os.path.isabs(recordings_root):
+            recordings_root = os.path.join(project_root, recordings_root)
+        recordings_tag = args.recordings_tag or f"{run_name}__{ckpt_name}"
+        recordings_base_dir = os.path.join(recordings_root, recordings_tag)
+    else:
+        recordings_base_dir = os.path.join(project_root, "videos")
+
     if args.output is None:
         out_name = f"split4_{ckpt_name}.mp4"
-        output_path = os.path.join(project_root, "videos", out_name)
+        output_path = os.path.join(recordings_base_dir, out_name)
     else:
         output_path = os.path.normpath(args.output)
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    os.makedirs(recordings_base_dir, exist_ok=True)
 
     ordered_tasks = [TASKS[k] for k in args.tasks]
     clips: list[str] = []
 
     for task in ordered_tasks:
         if args.reuse_recordings:
-            clip = _latest_video_for_task(project_root, task.play_id)
+            clip = _latest_video_for_task(recordings_base_dir, task.play_id)
             print(f"[INFO] Reusing {task.label} clip: {clip}")
         else:
             clip = _record_task_clip(
@@ -309,6 +350,7 @@ def main() -> int:
                 warmup_steps=args.warmup_steps,
                 num_envs=args.num_envs,
                 device=args.device,
+                recordings_base_dir=recordings_base_dir,
             )
         clips.append(clip)
 

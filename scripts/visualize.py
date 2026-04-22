@@ -12,6 +12,12 @@ parser.add_argument("--task", type=str, required=True, help="Gym ID of the task 
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to a trained model .pt file. If omitted, uses random actions.")
 parser.add_argument("--video", action="store_true", default=False, help="Record a video clip.")
 parser.add_argument("--video_length", type=int, default=300, help="Length of the recorded video (in steps).")
+parser.add_argument(
+    "--video_folder",
+    type=str,
+    default=None,
+    help="Optional video output directory override. Default: <project>/videos/<task>.",
+)
 parser.add_argument("--follow", action="store_true", default=False, help="Camera tracks the robot (good for terrain envs).")
 parser.add_argument("--eye", type=float, nargs=3, default=None, help="Camera eye position (x y z), relative when --follow.")
 parser.add_argument("--lookat", type=float, nargs=3, default=None, help="Camera lookat target (x y z).")
@@ -101,7 +107,10 @@ def main(env_cfg, agent_cfg):
 
     # wrap for video recording BEFORE rsl-rl wrapper so steps are captured
     if args_cli.video:
-        video_dir = os.path.join(os.path.dirname(__file__), "..", "videos", args_cli.task)
+        if args_cli.video_folder:
+            video_dir = os.path.abspath(args_cli.video_folder)
+        else:
+            video_dir = os.path.join(os.path.dirname(__file__), "..", "videos", args_cli.task)
         video_kwargs = {
             "video_folder": video_dir,
             "step_trigger": lambda step: step == 0,
