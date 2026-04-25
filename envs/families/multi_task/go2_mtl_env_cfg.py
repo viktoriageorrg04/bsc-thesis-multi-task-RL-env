@@ -2,7 +2,7 @@
 
   - flat: fast omni-dir walking (fam A)
   - random_rough: moderate omni-dir walking (fam B1)
-  - pyramid_stairs: forward-biased stair climbing (fam B2)
+  - pyramid_stairs_inv: forward-biased stair climbing (fam B2)
   - gap: moderate forward gap crossing (fam C2)
 
 The shared reward function uses the B1-proven set (track_vel + feet_air_time +
@@ -54,7 +54,7 @@ _MTL_TERRAIN_GEN = TerrainGeneratorCfg(
             border_width=0.25,
         ),
         # pyramid stairs (fam B2) — matches Go2-scaled step heights
-        "pyramid_stairs": terrain_gen.MeshPyramidStairsTerrainCfg(
+        "pyramid_stairs_inv": terrain_gen.MeshPyramidStairsTerrainCfg(
             proportion=0.25,
             step_height_range=(0.04, 0.16),
             step_width=0.3,
@@ -72,7 +72,7 @@ _MTL_TERRAIN_GEN = TerrainGeneratorCfg(
 )
 
 
-# ── reward fixes ───────────────────────────────────────────────────────────────
+# reward fixes
 
 def _safe_base_height_l2(
     env,
@@ -136,7 +136,7 @@ def _apply_mtl_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
     rw.dof_torques_l2.weight = -1.0e-5
 
 
-# ── env configs ────────────────────────────────────────────────────────────────
+# env configs
 
 @configclass
 class Go2MultiTaskEnvCfg(UnitreeGo2RoughEnvCfg):

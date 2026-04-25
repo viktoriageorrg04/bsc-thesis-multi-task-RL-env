@@ -29,7 +29,7 @@ import numpy as np
 _FOCUS_TERRAIN_TO_SUBTERRAIN = {
     "flat": "flat",
     "rough": "random_rough",
-    "stairs": "pyramid_stairs",
+    "stairs": "pyramid_stairs_inv",
     "gap": "gap",
 }
 
@@ -120,6 +120,80 @@ def _apply_terrain_sampling_profile(env_cfg: ManagerBasedRLEnvCfg, args) -> dict
     pretty = ", ".join(f"{k}={proportions[k]:.3f}" for k in sorted(proportions))
     print(f"[INFO] Terrain sampling profile ({args.sampling_strategy}): {pretty}")
     return proportions
+
+
+def _apply_phase_profile_overrides(env_cfg: ManagerBasedRLEnvCfg, phase_profile: str) -> dict[str, object]:
+    """Apply optional phase-specific command/reward overrides.
+
+    Profiles:
+      - default / p0_rough: keep unified env defaults (backward-compatible)
+      - p1_stairs: stair-biased commands + reward tuning to improve B2 rehearsal stability
+    """
+    profile = phase_profile or "default"
+    if profile in {"default", "p0_rough"}:
+        print(f"[INFO] Phase profile: {profile} (no additional cmd/reward overrides).")
+        return {"profile": profile, "overrides_applied": False}
+
+    if profile != "p1_stairs":
+        raise ValueError(f"Unknown phase profile: {profile}")
+
+    # Command profile: forward-biased stair climbing
+    cmd = env_cfg.commands.base_velocity
+    cmd.heading_command = False
+    cmd.rel_heading_envs = 0.0
+    cmd.rel_standing_envs = 0.0
+    cmd.ranges.lin_vel_x = (0.4, 0.9)
+    cmd.ranges.lin_vel_y = (0.0, 0.0)
+    cmd.ranges.ang_vel_z = (0.0, 0.0)
+    cmd.ranges.heading = (0.0, 0.0)
+
+    # Keep reset heading close to forward, when available.
+    reset_base = getattr(getattr(env_cfg, "events", None), "reset_base", None)
+    if reset_base is not None and isinstance(getattr(reset_base, "params", None), dict):
+        pose_range = reset_base.params.get("pose_range")
+        if isinstance(pose_range, dict):
+            pose_range["yaw"] = (-0.2, 0.2)
+
+    # Reward profile: B2-inspired tuning while staying in unified MTL task.
+    rw = env_cfg.rewards
+    rw.flat_orientation_l2.weight = -2.0
+    rw.base_height.weight = -3.8
+    if isinstance(getattr(rw.base_height, "params", None), dict):
+        rw.base_height.params["target_height"] = 0.43
+
+    if hasattr(rw, "dof_pos_limits") and rw.dof_pos_limits is not None:
+        rw.dof_pos_limits.weight = -1.0
+    if hasattr(rw, "feet_air_time") and rw.feet_air_time is not None:
+        rw.feet_air_time.weight = 0.016
+        if isinstance(getattr(rw.feet_air_time, "params", None), dict):
+            rw.feet_air_time.params["threshold"] = 0.18
+    if hasattr(rw, "dof_torques_l2") and rw.dof_torques_l2 is not None:
+        rw.dof_torques_l2.weight = -3.0e-5
+    if hasattr(rw, "dof_acc_l2") and rw.dof_acc_l2 is not None:
+        rw.dof_acc_l2.weight = -5.0e-7
+    if hasattr(rw, "action_rate_l2") and rw.action_rate_l2 is not None:
+        rw.action_rate_l2.weight = -0.0022
+    if hasattr(rw, "undesired_contacts") and rw.undesired_contacts is not None:
+        rw.undesired_contacts.weight = -0.45
+
+    print("[INFO] Phase profile: p1_stairs (stair-biased cmd/reward overrides applied).")
+    return {
+        "profile": profile,
+        "overrides_applied": True,
+        "commands": {
+            "heading_command": bool(cmd.heading_command),
+            "lin_vel_x": [float(cmd.ranges.lin_vel_x[0]), float(cmd.ranges.lin_vel_x[1])],
+            "lin_vel_y": [float(cmd.ranges.lin_vel_y[0]), float(cmd.ranges.lin_vel_y[1])],
+            "ang_vel_z": [float(cmd.ranges.ang_vel_z[0]), float(cmd.ranges.ang_vel_z[1])],
+        },
+        "rewards": {
+            "flat_orientation_l2": float(rw.flat_orientation_l2.weight),
+            "base_height": float(rw.base_height.weight),
+            "feet_air_time": float(getattr(rw.feet_air_time, "weight", 0.0)),
+            "dof_torques_l2": float(getattr(rw.dof_torques_l2, "weight", 0.0)),
+            "undesired_contacts": float(getattr(rw.undesired_contacts, "weight", 0.0)),
+        },
+    }
 
 
 def _read_scalar_series(log_dir: str, tag: str) -> tuple[np.ndarray, np.ndarray] | None:
@@ -393,6 +467,17 @@ parser.add_argument(
     help="Sampling probability for focused terrain (rest is split across other terrains).",
 )
 parser.add_argument(
+    "--phase_profile",
+    type=str,
+    default="default",
+    choices=("default", "p0_rough", "p1_stairs"),
+    help=(
+        "Optional phase-specific command/reward profile for unified MTL task. "
+        "'default' keeps existing behavior, 'p0_rough' is an alias of default, "
+        "'p1_stairs' applies stair-biased command/reward overrides."
+    ),
+)
+parser.add_argument(
     "--plot_learning_curves",
     action="store_true",
     default=False,
@@ -485,6 +570,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     if args_cli.max_iterations is not None:
         agent_cfg.max_iterations = args_cli.max_iterations
     sampling_proportions = _apply_terrain_sampling_profile(env_cfg, args_cli)
+    phase_profile_info = _apply_phase_profile_overrides(env_cfg, args_cli.phase_profile)
 
     _apply_mtl_stability_overrides(agent_cfg, args_cli)
 
@@ -556,6 +642,8 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
         "focus_terrain": args_cli.focus_terrain,
         "focus_prob": float(args_cli.focus_prob),
         "proportions": {k: float(v) for k, v in sampling_proportions.items()},
+        "phase_profile": args_cli.phase_profile,
+        "phase_overrides": phase_profile_info,
     }
     with open(os.path.join(log_dir, "params", "sampling_profile.json"), "w", encoding="utf-8") as f:
         json.dump(sampling_profile, f, indent=2)

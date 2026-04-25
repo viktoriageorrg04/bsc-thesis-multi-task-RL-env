@@ -197,6 +197,16 @@ def _resize_frame(frame: np.ndarray, target_h: int, target_w: int) -> np.ndarray
     return frame[y_idx][:, x_idx]
 
 
+def _is_probably_blank_frame(frame: np.ndarray) -> bool:
+    """Detect transient all-black frames emitted by the video recorder/renderer."""
+    if frame.size == 0:
+        return True
+
+    # True scene frames in these tasks are bright/gray; the problematic frames are
+    # effectively black. Use a conservative threshold so dark shadows are preserved.
+    return float(np.mean(frame)) < 3.0 and float(np.percentile(frame, 99)) < 8.0
+
+
 def _iter_trimmed_frames(path: str, start_frame: int):
     reader = iio.get_reader(path)
     index = 0
@@ -223,11 +233,24 @@ def _compose_split_video(
     fps: int,
 ) -> None:
     iters = [iter(_iter_trimmed_frames(path, warmup_steps)) for path in clips]
+    blank_counts = [0 for _ in clips]
+    last_good: list[np.ndarray | None] = [None for _ in clips]
+
+    def _next_repaired_frame(tile_index: int) -> np.ndarray:
+        while True:
+            frame = next(iters[tile_index])
+            if not _is_probably_blank_frame(frame):
+                last_good[tile_index] = frame
+                return frame
+
+            blank_counts[tile_index] += 1
+            if last_good[tile_index] is not None:
+                return last_good[tile_index].copy()
 
     first_frames = []
-    for it in iters:
+    for tile_index, _ in enumerate(iters):
         try:
-            first_frames.append(next(it))
+            first_frames.append(_next_repaired_frame(tile_index))
         except StopIteration as exc:
             raise RuntimeError(
                 "One clip has no frames after warmup. Reduce --warmup_steps or re-record."
@@ -245,9 +268,9 @@ def _compose_split_video(
         written = 1
         while written < video_length:
             frames = []
-            for it in iters:
+            for tile_index, _ in enumerate(iters):
                 try:
-                    frames.append(next(it))
+                    frames.append(_next_repaired_frame(tile_index))
                 except StopIteration:
                     print(
                         "[WARN] A source clip ended early; stopping at shortest clip length "
@@ -260,6 +283,10 @@ def _compose_split_video(
             written += 1
     finally:
         writer.close()
+
+    for clip, count in zip(clips, blank_counts):
+        if count:
+            print(f"[WARN] Repaired {count} blank frame(s) in: {clip}")
 
 
 def main() -> int:
