@@ -16,7 +16,12 @@ Logs are written to: logs/rsl_rl/<experiment_name>/<timestamp>/
 """
 
 import argparse
+import os
 import sys
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 from isaaclab.app import AppLauncher
 
@@ -242,7 +247,15 @@ from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.utils.dict import print_dict
 from isaaclab.utils.io import dump_yaml
 
-from isaaclab_rl.rsl_rl import RslRlBaseRunnerCfg, RslRlVecEnvWrapper, handle_deprecated_rsl_rl_cfg
+from isaaclab_rl.rsl_rl import RslRlBaseRunnerCfg, RslRlVecEnvWrapper
+try:
+    from isaaclab_rl.rsl_rl import handle_deprecated_rsl_rl_cfg
+except ImportError:
+    try:
+        from isaaclab_rl.rsl_rl.utils import handle_deprecated_rsl_rl_cfg
+    except ImportError:
+        def handle_deprecated_rsl_rl_cfg(agent_cfg, _installed_version):
+            return agent_cfg
 
 import importlib.metadata as metadata
 

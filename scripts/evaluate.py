@@ -18,8 +18,13 @@ Output:
 """
 
 import argparse
+import os
 import sys
 import traceback
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 from isaaclab.app import AppLauncher
 
@@ -54,7 +59,15 @@ import torch
 from rsl_rl.runners import OnPolicyRunner
 
 from isaaclab.envs import ManagerBasedRLEnvCfg
-from isaaclab_rl.rsl_rl import RslRlBaseRunnerCfg, RslRlVecEnvWrapper, handle_deprecated_rsl_rl_cfg
+from isaaclab_rl.rsl_rl import RslRlBaseRunnerCfg, RslRlVecEnvWrapper
+try:
+    from isaaclab_rl.rsl_rl import handle_deprecated_rsl_rl_cfg
+except ImportError:
+    try:
+        from isaaclab_rl.rsl_rl.utils import handle_deprecated_rsl_rl_cfg
+    except ImportError:
+        def handle_deprecated_rsl_rl_cfg(agent_cfg, _installed_version):
+            return agent_cfg
 
 import importlib.metadata as metadata
 

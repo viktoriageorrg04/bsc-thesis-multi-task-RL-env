@@ -21,6 +21,10 @@ from dataclasses import MISSING
 from datetime import datetime
 from glob import glob
 
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from isaaclab.app import AppLauncher
 
 import numpy as np
@@ -549,8 +553,15 @@ from isaaclab_rl.rsl_rl import (
     RslRlBaseRunnerCfg,
     RslRlMLPModelCfg,
     RslRlVecEnvWrapper,
-    handle_deprecated_rsl_rl_cfg,
 )
+try:
+    from isaaclab_rl.rsl_rl import handle_deprecated_rsl_rl_cfg
+except ImportError:
+    try:
+        from isaaclab_rl.rsl_rl.utils import handle_deprecated_rsl_rl_cfg
+    except ImportError:
+        def handle_deprecated_rsl_rl_cfg(agent_cfg, _installed_version):
+            return agent_cfg
 from isaaclab_tasks.utils import get_checkpoint_path
 from isaaclab_tasks.utils.hydra import hydra_task_config
 
