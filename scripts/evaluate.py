@@ -59,7 +59,12 @@ import torch
 from rsl_rl.runners import OnPolicyRunner
 
 from isaaclab.envs import ManagerBasedRLEnvCfg
+from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab_rl.rsl_rl import RslRlBaseRunnerCfg, RslRlVecEnvWrapper
+try:
+    from isaaclab_rl.rsl_rl import RslRlMLPModelCfg
+except ImportError:
+    RslRlMLPModelCfg = None
 try:
     from isaaclab_rl.rsl_rl import handle_deprecated_rsl_rl_cfg
 except ImportError:
@@ -83,10 +88,102 @@ from envs.success import (
 )
 
 
+def _has_checkpoint_key(checkpoint_path: str, state_name: str, key_substr: str) -> bool:
+    loaded = torch.load(checkpoint_path, weights_only=False, map_location="cpu")
+    state = loaded.get(state_name, {})
+    return any(key_substr in key for key in state)
+
+
+def _align_agent_cfg_to_checkpoint(agent_cfg: RslRlBaseRunnerCfg, checkpoint_path: str) -> None:
+    """Make the eval runner schema match the saved checkpoint before loading weights."""
+    loaded = torch.load(checkpoint_path, weights_only=False, map_location="cpu")
+    actor_state = loaded.get("actor_state_dict", {})
+    critic_state = loaded.get("critic_state_dict", {})
+    model_state = loaded.get("model_state_dict", {})
+
+    actor_has_obs_norm = any("obs_normalizer." in key for key in actor_state) or any(
+        key.startswith("actor_obs_normalizer.") for key in model_state
+    )
+    critic_has_obs_norm = any("obs_normalizer." in key for key in critic_state) or any(
+        key.startswith("critic_obs_normalizer.") for key in model_state
+    )
+    actor_uses_log_std = any("distribution.log_std_param" in key for key in actor_state) or "log_std" in model_state
+
+    if actor_has_obs_norm or critic_has_obs_norm:
+        if hasattr(agent_cfg, "policy") and agent_cfg.policy is not None:
+            if hasattr(agent_cfg.policy, "actor_obs_normalization"):
+                agent_cfg.policy.actor_obs_normalization = actor_has_obs_norm
+            if hasattr(agent_cfg.policy, "critic_obs_normalization"):
+                agent_cfg.policy.critic_obs_normalization = critic_has_obs_norm
+        if hasattr(agent_cfg, "actor") and agent_cfg.actor is not None and hasattr(agent_cfg.actor, "obs_normalization"):
+            agent_cfg.actor.obs_normalization = actor_has_obs_norm
+        if hasattr(agent_cfg, "critic") and agent_cfg.critic is not None and hasattr(agent_cfg.critic, "obs_normalization"):
+            agent_cfg.critic.obs_normalization = critic_has_obs_norm
+        print(
+            "[INFO] Eval cfg aligned to checkpoint observation normalization: "
+            f"actor={actor_has_obs_norm}, critic={critic_has_obs_norm}"
+        )
+
+    if actor_uses_log_std:
+        if hasattr(agent_cfg, "policy") and agent_cfg.policy is not None and hasattr(agent_cfg.policy, "noise_std_type"):
+            agent_cfg.policy.noise_std_type = "log"
+        if (
+            hasattr(agent_cfg, "actor")
+            and agent_cfg.actor is not None
+            and RslRlMLPModelCfg is not None
+            and hasattr(agent_cfg.actor, "distribution_cfg")
+        ):
+            dist_cfg = getattr(agent_cfg.actor, "distribution_cfg", None)
+            init_std = getattr(dist_cfg, "init_std", 1.0)
+            agent_cfg.actor.distribution_cfg = RslRlMLPModelCfg.GaussianDistributionCfg(
+                init_std=float(init_std),
+                std_type="log",
+            )
+        print("[INFO] Eval cfg aligned to checkpoint actor distribution std_type=log.")
+
+
 def _load_runner_checkpoint_compat(runner: OnPolicyRunner, checkpoint_path: str) -> None:
     """Load checkpoint with compatibility fallback for std/log-std key rename."""
     try:
         runner.load(checkpoint_path)
+        return
+    except KeyError as exc:
+        if str(exc).strip("'\"") != "actor_state_dict":
+            raise
+
+        loaded = torch.load(checkpoint_path, weights_only=False, map_location=runner.device)
+        model_state = loaded.get("model_state_dict")
+        if model_state is None:
+            raise
+
+        actor_state = {}
+        critic_state = {}
+        for key, value in model_state.items():
+            if key == "std":
+                actor_state["distribution.std_param"] = value
+            elif key == "log_std":
+                actor_state["distribution.log_std_param"] = value
+            elif key.startswith("actor."):
+                actor_state[f"mlp.{key.removeprefix('actor.')}"] = value
+            elif key.startswith("actor_obs_normalizer."):
+                actor_state[f"obs_normalizer.{key.removeprefix('actor_obs_normalizer.')}"] = value
+            elif key.startswith("critic."):
+                critic_state[f"mlp.{key.removeprefix('critic.')}"] = value
+            elif key.startswith("critic_obs_normalizer."):
+                critic_state[f"obs_normalizer.{key.removeprefix('critic_obs_normalizer.')}"] = value
+
+        missing_actor, unexpected_actor = runner.alg.actor.load_state_dict(actor_state, strict=False)
+        missing_critic, unexpected_critic = runner.alg.critic.load_state_dict(critic_state, strict=False)
+        if loaded.get("iter") is not None:
+            runner.current_learning_iteration = loaded["iter"]
+
+        print(
+            "[WARN] Loaded newer monolithic ActorCritic checkpoint into local "
+            "split actor/critic RSL-RL model for inference."
+        )
+        if missing_actor or unexpected_actor or missing_critic or unexpected_critic:
+            print(f"[WARN] actor missing={missing_actor}, unexpected={unexpected_actor}")
+            print(f"[WARN] critic missing={missing_critic}, unexpected={unexpected_critic}")
         return
     except RuntimeError as exc:
         message = str(exc)
@@ -132,6 +229,32 @@ TASK_SHORT = {
 
 # reverse: short name → gym ID
 SHORT_TO_GYM = {v: k for k, v in TASK_SHORT.items()}
+
+CONDITIONED_TASK_INDEX = {
+    "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0": 0,
+    "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0": 0,
+    "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0": 1,
+    "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0": 2,
+    "MTL-Custom-Gap-Unitree-Go2-C2-v0": 3,
+}
+
+
+def _constant_conditioned_task_id(env, task_index: int) -> torch.Tensor:
+    task_id = torch.zeros((env.num_envs, 4), dtype=torch.float32, device=env.device)
+    task_id[:, task_index] = 1.0
+    return task_id
+
+
+def _maybe_add_conditioned_task_id(env_cfg: ManagerBasedRLEnvCfg, eval_task_id: str, reported_train_task: str) -> None:
+    if "MTL-Conditioned-Unitree-Go2-AllTerrains" not in reported_train_task:
+        return
+    if eval_task_id not in CONDITIONED_TASK_INDEX:
+        return
+    task_index = CONDITIONED_TASK_INDEX[eval_task_id]
+    env_cfg.observations.policy.task_id = ObsTerm(
+        func=_constant_conditioned_task_id,
+        params={"task_index": task_index},
+    )
 
 
 def _run_eval_on_env(policy, env, eval_task_id, num_episodes, device):
@@ -213,8 +336,10 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     """Evaluate trained policy. Uses a single env (no close+reopen) to avoid Isaac Sim hangs."""
 
     device = args_cli.device or "cuda:0"
+    reported_train_task = args_cli.report_train_task or args_cli.task
     env_cfg.scene.num_envs = args_cli.num_envs
     env_cfg.sim.device = device
+    _maybe_add_conditioned_task_id(env_cfg, args_cli.task, reported_train_task)
 
     # --- create the one and only env, load policy, and eval on training task ---
     print(f"[INFO] Creating environment for: {args_cli.task}")
@@ -224,7 +349,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     print(f"[INFO] Env created in {time.time() - t0:.1f}s")
 
     installed_version = metadata.version("rsl-rl-lib")
+    _align_agent_cfg_to_checkpoint(agent_cfg, args_cli.checkpoint)
     agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, installed_version)
+    _align_agent_cfg_to_checkpoint(agent_cfg, args_cli.checkpoint)
     runner = OnPolicyRunner(wrapped, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
     _load_runner_checkpoint_compat(runner, args_cli.checkpoint)
     policy = runner.get_inference_policy(device=device)
@@ -233,7 +360,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     print(f"[INFO] Policy obs dim: {train_obs_dim}")
     print(f"[INFO] Checkpoint: {args_cli.checkpoint}")
 
-    reported_train_task = args_cli.report_train_task or args_cli.task
     train_short = TASK_SHORT.get(reported_train_task, reported_train_task.replace("-", "_"))
     if "Unified" in reported_train_task or "AllTerrains" in reported_train_task:
         train_short = "MTL_unified"
@@ -271,6 +397,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
             try:
                 from isaaclab_tasks.utils import parse_env_cfg
                 eval_cfg = parse_env_cfg(eval_task, device=device, num_envs=args_cli.num_envs, use_fabric=True)
+                _maybe_add_conditioned_task_id(eval_cfg, eval_task, reported_train_task)
                 eval_env = gym.make(eval_task, cfg=eval_cfg)
                 eval_obs_dim = eval_env.unwrapped.observation_manager.group_obs_dim["policy"][0]
                 print(f"  Eval obs dim: {eval_obs_dim} (policy expects: {train_obs_dim})")

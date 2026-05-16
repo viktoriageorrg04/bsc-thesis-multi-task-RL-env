@@ -33,6 +33,26 @@ gym.register(
 )
 
 gym.register(
+    id="MTL-Velocity-Flat-Unitree-Go2-A1-Forward-Legacy-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.go2_fam_a_env_cfg:Go2A1ForwardWalkLegacyEnvCfg",
+        "rsl_rl_cfg_entry_point": _RSL_RL_GO2_ROUGH_CFG,
+    },
+)
+
+gym.register(
+    id="MTL-Velocity-Flat-Unitree-Go2-A1-Forward-Legacy-Play-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.go2_fam_a_env_cfg:Go2A1ForwardWalkLegacyEnvCfg_PLAY",
+        "rsl_rl_cfg_entry_point": _RSL_RL_GO2_ROUGH_CFG,
+    },
+)
+
+gym.register(
     id="MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,

@@ -214,6 +214,7 @@ logs/
 runs/
 checkpoints/
 wandb/
+slurm_logs/
 
 # --- Analysis outputs ---
 analysis/plots/*
@@ -228,3 +229,9 @@ results/
 # helper docs (comment out before the next meeting)
 docs/task_family_plan.md
 docs/slides_extracted.txt
+
+outputs/
+
+# large experiment artefacts
+*.tar.gz
+*.pt

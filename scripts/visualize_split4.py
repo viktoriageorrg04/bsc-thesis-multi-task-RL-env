@@ -37,6 +37,7 @@ class TileTask:
     key: str
     label: str
     play_id: str
+    conditioned_eval_task: str
     follow: bool = True
     eye: tuple[float, float, float] | None = None
     lookat: tuple[float, float, float] | None = None
@@ -47,6 +48,7 @@ TASKS = {
         key="A1",
         label="A1 flat",
         play_id="MTL-Velocity-Flat-Unitree-Go2-A1-Forward-Play-v0",
+        conditioned_eval_task="A1_forward",
         follow=True,
         eye=(2.4, -4.8, 1.9),
     ),
@@ -54,6 +56,7 @@ TASKS = {
         key="A2",
         label="A2 omni",
         play_id="MTL-Velocity-Flat-Unitree-Go2-A2-Omni-Play-v0",
+        conditioned_eval_task="A2_omni",
         follow=True,
         eye=(2.4, -4.8, 1.9),
     ),
@@ -61,6 +64,7 @@ TASKS = {
         key="B1",
         label="B1 rough",
         play_id="MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-Play-v0",
+        conditioned_eval_task="B1_rough",
         follow=True,
         eye=(2.6, -5.2, 2.0),
     ),
@@ -68,6 +72,7 @@ TASKS = {
         key="B2",
         label="B2 stairs",
         play_id="MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-Play-v0",
+        conditioned_eval_task="B2_stairs",
         follow=True,
         eye=(2.8, -5.4, 2.1),
     ),
@@ -75,6 +80,7 @@ TASKS = {
         key="C2",
         label="C2 gap",
         play_id="MTL-Custom-Gap-Unitree-Go2-C2-Play-v0",
+        conditioned_eval_task="C2_gap",
         follow=True,
         eye=(2.8, -5.6, 2.2),
     ),
@@ -143,6 +149,8 @@ def _record_task_clip(
         task.play_id,
         "--checkpoint",
         checkpoint,
+        "--conditioned_eval_task",
+        task.conditioned_eval_task,
         "--headless",
         "--enable_cameras",
         "--video",

@@ -26,3 +26,23 @@ gym.register(
         "rsl_rl_cfg_entry_point": _RSL_RL_GO2_ROUGH_CFG,
     },
 )
+
+gym.register(
+    id="MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.go2_mtl_env_cfg:Go2MultiTaskConditionedEnvCfg",
+        "rsl_rl_cfg_entry_point": _RSL_RL_GO2_ROUGH_CFG,
+    },
+)
+
+gym.register(
+    id="MTL-Conditioned-Unitree-Go2-AllTerrains-Play-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.go2_mtl_env_cfg:Go2MultiTaskConditionedEnvCfg_PLAY",
+        "rsl_rl_cfg_entry_point": _RSL_RL_GO2_ROUGH_CFG,
+    },
+)

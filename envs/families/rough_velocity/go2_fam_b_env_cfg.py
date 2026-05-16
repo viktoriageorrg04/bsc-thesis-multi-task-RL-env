@@ -195,15 +195,13 @@ class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
         self.events.reset_base.params["pose_range"]["yaw"] = (-0.2, 0.2)
 
         rw = self.rewards
-        # rw.flat_orientation_l2.weight = -1.2
-        rw.flat_orientation_l2.weight = -2.0
+        rw.flat_orientation_l2.weight = -1.5
 
         rw.base_height = RewTerm(
             func=core_mdp.base_height_l2,
-            # weight=-1.5,
-            weight=-3.8,
+            weight=-3.5,
             params={
-                "target_height": 0.43,
+                "target_height": 0.42,
                 "asset_cfg": SceneEntityCfg("robot"),
                 "sensor_cfg": SceneEntityCfg("height_scanner"),
             },
@@ -212,20 +210,16 @@ class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
         # discourage extreme joint angles
         rw.dof_pos_limits.weight = -1.0
 
-        # recover bigger trot steps
-        # rw.feet_air_time.weight = 0.04
-        rw.feet_air_time.weight = 0.016
-        # rw.feet_air_time.params["threshold"] = 0.35
-        rw.feet_air_time.params["threshold"] = 0.18
-        # rw.dof_torques_l2.weight = -5.0e-5
-        rw.dof_torques_l2.weight = -3.0e-5
-        # rw.action_rate_l2.weight = -0.005
-        rw.dof_acc_l2.weight = -5.0e-7
-        rw.action_rate_l2.weight = -0.0022
+        # Match the old working B2 baseline from 2026-04-15_14-38-36.
+        rw.feet_air_time.weight = 0.02
+        rw.feet_air_time.params["threshold"] = 0.25
+        rw.dof_torques_l2.weight = -2.0e-5
+        rw.dof_acc_l2.weight = -2.5e-7
+        rw.action_rate_l2.weight = -0.003
 
         rw.undesired_contacts = RewTerm(
             func=core_mdp.undesired_contacts,
-            weight=-0.45,
+            weight=-0.7,
             params={
                 "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*_thigh", ".*_calf"]),
                 "threshold": 1.0,

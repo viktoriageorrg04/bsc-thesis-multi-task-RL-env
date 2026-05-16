@@ -56,6 +56,12 @@ def main() -> int:
         action="store_true",
         help="Skip heatmap image export.",
     )
+    parser.add_argument(
+        "--exclude",
+        nargs="*",
+        default=[],
+        help="Train-task result folder names to exclude from the exported matrix.",
+    )
     args = parser.parse_args()
 
     results_root = Path(args.results_root)
@@ -63,8 +69,11 @@ def main() -> int:
         raise FileNotFoundError(f"results_root does not exist: {results_root}")
 
     summaries: dict[str, dict[str, dict]] = {}
+    excluded = set(args.exclude)
     for summary_path in sorted(results_root.glob("*/summary.json")):
         train_short = summary_path.parent.name
+        if train_short in excluded:
+            continue
         summaries[train_short] = _load_summary(summary_path)
 
     if not summaries:

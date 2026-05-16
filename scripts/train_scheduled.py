@@ -99,7 +99,7 @@ parser.add_argument(
 parser.add_argument(
     "--stand_reward_anneal",
     action=argparse.BooleanOptionalAction,
-    default=False,
+    default=True,
     help=(
         "Anneal stand-related reward weights during training (strong early, weaker later). "
         "No-op when stand reward terms are absent for the selected task."
@@ -215,12 +215,6 @@ parser.add_argument(
     "--logger", type=str, default=None, choices={"wandb", "tensorboard", "neptune"}, help="Logger backend."
 )
 parser.add_argument("--log_project_name", type=str, default=None, help="Project name for wandb/neptune.")
-parser.add_argument(
-    "--distribution_safety_patch",
-    action="store_true",
-    default=False,
-    help="Clamp invalid/NaN Gaussian policy std values at runtime to avoid RSL-RL scalar-std crashes.",
-)
 
 # AppLauncher (headless, device, etc.)
 AppLauncher.add_app_launcher_args(parser)
@@ -632,59 +626,6 @@ def _train_with_early_stopping(runner: OnPolicyRunner, max_iterations: int, log_
     return trained_iterations
 
 
-def _enable_distribution_safety_patch() -> None:
-    """Patch rsl_rl Gaussian distribution update paths with finite/std clamps."""
-    from torch.distributions import Normal
-
-    try:
-        from rsl_rl.modules.distribution import GaussianDistribution, HeteroscedasticGaussianDistribution
-    except ImportError:
-        print("[WARN] rsl_rl.modules.distribution unavailable; skipping distribution safety patch.")
-        return
-
-    if getattr(GaussianDistribution, "_bsc_safe_patch_applied", False):
-        return
-
-    def _sanitize_std(std: torch.Tensor) -> torch.Tensor:
-        return torch.nan_to_num(std, nan=1.0, posinf=5.0, neginf=1.0e-6).clamp(min=1.0e-6, max=5.0)
-
-    def _sanitize_mean(mean: torch.Tensor) -> torch.Tensor:
-        return torch.nan_to_num(mean, nan=0.0, posinf=1.0e6, neginf=-1.0e6)
-
-    def _safe_gaussian_update(self, mlp_output: torch.Tensor) -> None:
-        mean = _sanitize_mean(mlp_output)
-        if self.std_type == "scalar":
-            self.std_param.data.nan_to_num_(nan=1.0, posinf=5.0, neginf=1.0e-6)
-            self.std_param.data.clamp_(min=1.0e-6, max=5.0)
-            std = self.std_param.expand_as(mean)
-        elif self.std_type == "log":
-            self.log_std_param.data.nan_to_num_(nan=0.0, posinf=2.0, neginf=-20.0)
-            self.log_std_param.data.clamp_(min=-20.0, max=2.0)
-            std = torch.exp(self.log_std_param).expand_as(mean)
-        else:
-            raise ValueError(f"Unknown std_type: {self.std_type}")
-        self._distribution = Normal(mean, _sanitize_std(std))
-
-    def _safe_hetero_update(self, mlp_output: torch.Tensor) -> None:
-        if self.std_type == "scalar":
-            mean, std = torch.unbind(mlp_output, dim=-2)
-            std = _sanitize_std(std)
-        elif self.std_type == "log":
-            mean, log_std = torch.unbind(mlp_output, dim=-2)
-            log_std = torch.nan_to_num(log_std, nan=0.0, posinf=2.0, neginf=-20.0).clamp(min=-20.0, max=2.0)
-            std = _sanitize_std(torch.exp(log_std))
-        else:
-            raise ValueError(f"Unknown std_type: {self.std_type}")
-        mean = _sanitize_mean(mean)
-        self._distribution = Normal(mean, std)
-
-    GaussianDistribution.update = _safe_gaussian_update
-    HeteroscedasticGaussianDistribution.update = _safe_hetero_update
-    GaussianDistribution._bsc_safe_patch_applied = True
-
-    print("[INFO] Applied runtime distribution safety patch for rsl_rl Gaussian policies.")
-
-
 def _moving_average(values: np.ndarray, window: int) -> np.ndarray:
     """Simple moving average with edge-preserving behavior for short arrays."""
     window = max(1, int(window))
@@ -806,9 +747,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     # wrap for RSL-RL
     env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
 
-    if args_cli.distribution_safety_patch:
-        _enable_distribution_safety_patch()
-
     # create PPO runner
     runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device)
     runner.add_git_repo_to_log(__file__)
@@ -825,9 +763,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), agent_cfg)
 
-    # train. By default this follows the original baseline path: one continuous
-    # RSL-RL learn() call. Chunked training is used only when early stopping or
-    # reward scheduling is explicitly enabled.
+    # train (optionally with early stopping)
     trained_iterations = _train_with_early_stopping(
         runner=runner,
         max_iterations=int(agent_cfg.max_iterations),

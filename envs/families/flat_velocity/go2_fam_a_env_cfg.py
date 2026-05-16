@@ -86,6 +86,26 @@ class Go2A1ForwardWalkEnvCfg(UnitreeGo2RoughEnvCfg):
 
 
 @configclass
+class Go2A1ForwardWalkLegacyEnvCfg(Go2A1ForwardWalkEnvCfg):
+    """Legacy A1 config matching the April single-task baseline setup."""
+
+    def __post_init__(self):
+        super().__post_init__()
+
+        # The April A1 baseline used this always-on base-height term in
+        # addition to the command-gated stand_base_height term.
+        self.rewards.base_height = RewTerm(
+            func=core_mdp.base_height_l2,
+            weight=-5.0,
+            params={
+                "target_height": 0.38,
+                "asset_cfg": SceneEntityCfg("robot"),
+                "sensor_cfg": SceneEntityCfg("height_scanner"),
+            },
+        )
+
+
+@configclass
 class Go2A2OmniWalkEnvCfg(UnitreeGo2RoughEnvCfg):
     """Fam A / task A2: omni-directional walk on flat terrain.
 
@@ -130,6 +150,19 @@ class Go2A2OmniWalkEnvCfg(UnitreeGo2RoughEnvCfg):
 @configclass
 class Go2A1ForwardWalkEnvCfg_PLAY(Go2A1ForwardWalkEnvCfg):
     """Lightweight play/vis variant for A1."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.scene.num_envs = 50
+        self.scene.env_spacing = 2.5
+        self.observations.policy.enable_corruption = False
+        self.events.base_external_force_torque = None
+        self.events.push_robot = None
+
+
+@configclass
+class Go2A1ForwardWalkLegacyEnvCfg_PLAY(Go2A1ForwardWalkLegacyEnvCfg):
+    """Lightweight play/vis variant for the legacy A1 baseline."""
 
     def __post_init__(self):
         super().__post_init__()
