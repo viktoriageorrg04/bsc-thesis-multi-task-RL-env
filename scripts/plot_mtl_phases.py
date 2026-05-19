@@ -68,6 +68,42 @@ def _phase_label(run_name: str, sampling_profile: dict | None) -> str:
     return f"{run_name}\n{strategy}"
 
 
+def _compact_phase_label(run_name: str, phase_idx: int, sampling_profile: dict | None) -> str:
+    """Return a short label suitable for plotting above a phase span."""
+    name = run_name.lower()
+    if "p0_gait" in name:
+        base = "P0 gait"
+    elif "b2safe" in name:
+        base = "P2 B2 safe"
+    elif "balanced" in name:
+        base = "P2 balanced"
+    elif "gap_omni_recovery" in name:
+        base = "P2 gap/omni"
+    elif "continue_gapomni" in name:
+        base = "P2 gap+omni"
+    elif "final_c2b1_consolidate" in name:
+        base = "P2 final"
+    elif "b2stepup" in name:
+        base = "P1 B2 step-up"
+    elif "b2ramp" in name and "from_stepup" in name:
+        base = "P1 B2 ramp+"
+    elif "b2ramp" in name:
+        base = "P1 B2 ramp"
+    elif "b2easy" in name:
+        base = "P1 B2 easy"
+    elif "b2bridge" in name:
+        base = "P1 B2 bridge"
+    else:
+        base = f"P{phase_idx}"
+
+    if sampling_profile is None:
+        return base
+    strategy = sampling_profile.get("strategy")
+    if strategy and strategy != "unknown":
+        return f"{base}\n{strategy}"
+    return base
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Plot MTL phase curves with sampling-profile annotations.")
     parser.add_argument(
@@ -123,6 +159,7 @@ def main() -> None:
         info["start"] = start
         info["end"] = start + info["len"] - 1
         info["label"] = _phase_label(info["name"], info["profile"])
+        info["short_label"] = _compact_phase_label(info["name"], len([x for x in run_infos if "start" in x]), info["profile"])
         start = info["end"] + 1
 
     output_dir = args.output_dir or os.path.join(args.experiment_dir, "analysis")
@@ -159,28 +196,30 @@ def main() -> None:
             smoothed = _moving_average(values, args.smoothing)
             if not args.hide_raw:
                 ax.plot(x, values, linewidth=0.9, alpha=0.25, color=color)
-            ax.plot(x, smoothed, linewidth=2.0, color=color, label=info["name"] if tag_idx == 0 else None)
+            ax.plot(x, smoothed, linewidth=2.0, color=color, label=info["short_label"].replace("\n", " ") if tag_idx == 0 else None)
 
         for info in run_infos[:-1]:
             ax.axvline(info["end"] + 0.5, linestyle="--", linewidth=1.0, alpha=0.6, color="black")
 
-        for info in run_infos:
-            ax.text(
-                (info["start"] + info["end"]) / 2.0,
-                1.02,
-                info["label"],
-                transform=ax.get_xaxis_transform(),
-                ha="center",
-                va="bottom",
-                fontsize=8,
-            )
+        if tag_idx == 0:
+            for info in run_infos:
+                ax.text(
+                    (info["start"] + info["end"]) / 2.0,
+                    1.02,
+                    info["short_label"],
+                    transform=ax.get_xaxis_transform(),
+                    ha="center",
+                    va="bottom",
+                    fontsize=8,
+                    linespacing=1.15,
+                )
 
         ax.set_title(tag)
         ax.set_xlabel("global iteration (concatenated phases)")
         ax.set_ylabel("value")
         ax.grid(True, alpha=0.25)
         if tag_idx == 0:
-            ax.legend(loc="upper left", fontsize=8)
+            ax.legend(loc="upper left", fontsize=8, ncol=2, frameon=True)
 
     fig.suptitle(args.title, fontsize=14)
     fig.tight_layout(rect=(0, 0, 1, 0.98))
@@ -190,10 +229,11 @@ def main() -> None:
 
     csv_path = os.path.join(output_dir, "mtl_phase_ranges.csv")
     with open(csv_path, "w", encoding="utf-8") as f:
-        f.write("run,start_step,end_step,label,path\n")
+        f.write("run,start_step,end_step,short_label,label,path\n")
         for info in run_infos:
             label = info["label"].replace("\n", " | ")
-            f.write(f"{info['name']},{info['start']},{info['end']},\"{label}\",\"{info['path']}\"\n")
+            short_label = info["short_label"].replace("\n", " | ")
+            f.write(f"{info['name']},{info['start']},{info['end']},\"{short_label}\",\"{label}\",\"{info['path']}\"\n")
 
     print(f"[INFO] Saved plot: {png_path}")
     print(f"[INFO] Saved phase ranges: {csv_path}")
