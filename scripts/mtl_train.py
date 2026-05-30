@@ -147,6 +147,7 @@ def _apply_phase_profile_overrides(env_cfg: ManagerBasedRLEnvCfg, phase_profile:
       - p0_gait: level-0 gait bootstrap with easier forward-biased commands
       - p1_b2_easy: easy corrected-stairs bridge after p0_gait
       - p1_b2_stepup: reduced-height B2 contact/step-up curriculum
+      - p1_b2_stepup_retain: reduced-height B2 bridge with broad flat/rough rehearsal
       - p1_b2_ramp: stair-heavy transition bridge from easy B2 to benchmark B2
       - p1_mixed: intermediate command/terrain curriculum after p0_gait
       - p1_omni: bridge from p1_mixed toward full omni/heading eval commands
@@ -270,6 +271,59 @@ def _apply_phase_profile_overrides(env_cfg: ManagerBasedRLEnvCfg, phase_profile:
             },
             "rewards": {
                 "stairs_feet_air_time": 0.06,
+            },
+        }
+
+    if profile == "p1_b2_stepup_retain":
+        setattr(env_cfg, "mtl_command_profile", "p1_b2_stepup_retain")
+        setattr(env_cfg, "mtl_stair_forward_progress_weight", 0.45)
+        terrain = getattr(getattr(env_cfg, "scene", None), "terrain", None)
+        terrain_gen = getattr(terrain, "terrain_generator", None)
+        if terrain is not None:
+            terrain.max_init_terrain_level = 0
+        if terrain_gen is not None and hasattr(terrain_gen, "sub_terrains"):
+            stairs = terrain_gen.sub_terrains.get("pyramid_stairs_inv")
+            if stairs is not None and hasattr(stairs, "step_height_range"):
+                stairs.step_height_range = (0.02, 0.08)
+
+        cmd = env_cfg.commands.base_velocity
+        cmd.heading_command = False
+        cmd.rel_heading_envs = 0.0
+        cmd.rel_standing_envs = 0.0
+
+        reset_base = getattr(getattr(env_cfg, "events", None), "reset_base", None)
+        if reset_base is not None and isinstance(getattr(reset_base, "params", None), dict):
+            pose_range = reset_base.params.get("pose_range")
+            if isinstance(pose_range, dict):
+                pose_range["x"] = (-0.25, 0.5)
+                pose_range["y"] = (-0.25, 0.25)
+                pose_range["yaw"] = (-0.15, 0.15)
+
+        rw = getattr(env_cfg, "rewards", None)
+        feet_air = getattr(rw, "feet_air_time", None) if rw is not None else None
+        if feet_air is not None and isinstance(getattr(feet_air, "params", None), dict):
+            values = list(feet_air.params.get("values", (0.25, 0.25, 0.02, 0.5)))
+            if len(values) == 4:
+                values[2] = 0.04
+                feet_air.params["values"] = tuple(values)
+
+        print("[INFO] Phase profile: p1_b2_stepup_retain (easy B2 bridge with broad rehearsal applied).")
+        return {
+            "profile": profile,
+            "overrides_applied": True,
+            "mtl_command_profile": "p1_b2_stepup_retain",
+            "mtl_stair_forward_progress_weight": 0.45,
+            "max_init_terrain_level": 0,
+            "terrain_curriculum_enabled": True,
+            "stair_step_height_range": [0.02, 0.08],
+            "reset_pose": {"x": [-0.25, 0.5], "y": [-0.25, 0.25], "yaw": [-0.15, 0.15]},
+            "commands": {
+                "flat_rough": {"lin_vel_x": [-0.6, 0.9], "lin_vel_y": [-0.7, 0.7], "ang_vel_z": [-0.7, 0.7]},
+                "stairs": {"lin_vel_x": [0.25, 0.6], "lin_vel_y": [0.0, 0.0], "ang_vel_z": [0.0, 0.0]},
+                "gap": {"lin_vel_x": [0.35, 0.75], "lin_vel_y": [-0.1, 0.1], "ang_vel_z": [-0.2, 0.2]},
+            },
+            "rewards": {
+                "stairs_feet_air_time": 0.04,
             },
         }
 
@@ -914,6 +968,7 @@ parser.add_argument(
         "p0_gait",
         "p1_b2_easy",
         "p1_b2_stepup",
+        "p1_b2_stepup_retain",
         "p1_b2_ramp",
         "p1_mixed",
         "p1_omni",
@@ -926,6 +981,7 @@ parser.add_argument(
         "'p0_gait' applies level-0 gait bootstrap commands, "
         "'p1_b2_easy' applies an easy corrected-stairs bridge, "
         "'p1_b2_stepup' applies reduced-height B2 step-up curriculum, "
+        "'p1_b2_stepup_retain' applies reduced-height B2 with broad flat/rough rehearsal, "
         "'p1_b2_ramp' applies a B2 transition/climb bridge, "
         "'p1_mixed' applies intermediate command/terrain curriculum, "
         "'p1_omni' widens p1_mixed toward full omni benchmark commands, "

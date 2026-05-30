@@ -1,0 +1,57 @@
+{
+  "A1_forward": {
+    "num_episodes": 1024,
+    "success_rate": 0.998046875,
+    "mean_success_step_ratio": 0.9838208149432558,
+    "mean_lin_vel_error": 0.06609997637969556,
+    "mean_ang_vel_error": 0.07787387078288231,
+    "mean_alive_time_s": 19.99009765625,
+    "failure_rate": 0.001953125,
+    "train_task": "B2_stairs_s2",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0"
+  },
+  "A2_omni": {
+    "num_episodes": 1024,
+    "success_rate": 0.005859375,
+    "mean_success_step_ratio": 0.1025577794476519,
+    "mean_lin_vel_error": 0.5957337182186341,
+    "mean_ang_vel_error": 0.686077205683199,
+    "mean_alive_time_s": 15.989804687500005,
+    "failure_rate": 0.3671875,
+    "train_task": "B2_stairs_s2",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0"
+  },
+  "B1_rough": {
+    "num_episodes": 1024,
+    "success_rate": 0.0068359375,
+    "mean_success_step_ratio": 0.08672858059514839,
+    "mean_lin_vel_error": 0.636166389033874,
+    "mean_ang_vel_error": 0.7054631103089163,
+    "mean_alive_time_s": 16.360097656250016,
+    "failure_rate": 0.341796875,
+    "train_task": "B2_stairs_s2",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0"
+  },
+  "B2_stairs": {
+    "num_episodes": 1024,
+    "success_rate": 0.9990234375,
+    "mean_success_step_ratio": 0.9928235677083366,
+    "mean_lin_vel_error": 0.07966221540699575,
+    "mean_ang_vel_error": 0.08750131961198024,
+    "mean_alive_time_s": 19.9974609375,
+    "failure_rate": 0.0009765625,
+    "train_task": "B2_stairs_s2",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0"
+  },
+  "C2_gap": {
+    "num_episodes": 1024,
+    "success_rate": 0.353515625,
+    "mean_success_step_ratio": 0.5459604503431585,
+    "mean_lin_vel_error": 0.36969222592089546,
+    "mean_ang_vel_error": 0.17735387209639658,
+    "mean_alive_time_s": 17.233164062500016,
+    "failure_rate": 0.2255859375,
+    "train_task": "B2_stairs_s2",
+    "eval_task": "MTL-Custom-Gap-Unitree-Go2-C2-v0"
+  }
+}

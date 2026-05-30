@@ -9,6 +9,7 @@ import copy
 import math
 
 import isaaclab.envs.mdp as core_mdp
+import torch
 from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
@@ -32,6 +33,26 @@ def _keep_single_sub_terrain(cfg: UnitreeGo2RoughEnvCfg, terrain_key: str) -> No
     terrain_generator = copy.deepcopy(generator)
     terrain_generator.sub_terrains = {terrain_key: terrain_generator.sub_terrains[terrain_key]}
     cfg.scene.terrain.terrain_generator = terrain_generator
+
+
+def _b2_forward_progress(
+    env,
+    max_reward: float = 0.8,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """Dense B2 incentive for actually moving into the stair face."""
+    asset = env.scene[asset_cfg.name]
+    return torch.clamp(asset.data.root_lin_vel_b[:, 0], min=0.0, max=float(max_reward))
+
+
+def _b2_forward_speed_shortfall(
+    env,
+    min_speed: float = 0.30,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """Penalty helper for B2 policies that survive while barely moving."""
+    asset = env.scene[asset_cfg.name]
+    return torch.clamp(float(min_speed) - asset.data.root_lin_vel_b[:, 0], min=0.0, max=float(min_speed))
 
 
 def _fix_rough_reward_shaping(cfg: UnitreeGo2RoughEnvCfg) -> None:
@@ -98,70 +119,6 @@ class Go2B1RoughWalkEnvCfg(UnitreeGo2RoughEnvCfg):
 
         _fix_rough_reward_shaping(self)
 
-
-# @configclass
-# class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
-#     """fam B / task B2: stair climb on pyramid_stairs terrain only.
-
-#     Built on the proven Isaac Lab Go2 rough-velocity defaults with MINIMAL
-#     changes.  Does NOT call _fix_rough_reward_shaping — that function
-#     overrode Go2-tuned penalties (dof_torques 20x lighter, feet_air_time
-#     25x heavier) which produced bad gaits on stairs.
-#     """
-
-#     def __post_init__(self):
-#         super().__post_init__()
-#         _keep_single_sub_terrain(self, "pyramid_stairs")
-
-#         # scale down stair height for Go2
-#         stairs = self.scene.terrain.terrain_generator.sub_terrains["pyramid_stairs"]
-#         # stairs.step_height_range = (0.04, 0.16)
-#         stairs.step_height_range = (0.03, 0.12)
-#         self.scene.terrain.max_init_terrain_level = 1
-
-#         # B2 is forward-biased with low lateral/yaw commands.
-#         cmd = self.commands.base_velocity
-#         cmd.heading_command = False
-#         cmd.rel_heading_envs = 0.0
-#         cmd.rel_standing_envs = 0.0
-#         cmd.ranges.lin_vel_x = (0.3, 0.8)
-#         # cmd.ranges.lin_vel_y = (-0.15, 0.15)
-#         # cmd.ranges.ang_vel_z = (-0.3, 0.3)
-#         cmd.ranges.lin_vel_y = (-0.05, 0.05)
-#         cmd.ranges.ang_vel_z = (-0.1, 0.1)
-#         cmd.ranges.heading = (0.0, 0.0)
-
-#         rw = self.rewards
-
-#         # posture: mild orientation penalty to discourage crawling
-#         # annealed via --posture_reward_anneal (strong early, decays to this)
-#         # rw.flat_orientation_l2.weight = -1.0
-#         rw.flat_orientation_l2.weight = -1.5
-
-#         # terrain-relative height target so the robot doesn't belly-flop
-#         # annealed via --posture_reward_anneal
-#         rw.base_height = RewTerm(
-#             func=core_mdp.base_height_l2,
-#             # weight=-2.0,
-#             weight=-1.5,
-#             params={
-#                 "target_height": 0.37,
-#                 "asset_cfg": SceneEntityCfg("robot"),
-#                 "sensor_cfg": SceneEntityCfg("height_scanner"),
-#             },
-#         )
-        
-#         # mild stepping/contact shaping for stair ascent
-#         rw.feet_air_time.weight = 0.08
-#         rw.undesired_contacts = RewTerm(
-#             func=core_mdp.undesired_contacts,
-#             weight=-0.5,
-#             params={
-#                 "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*_thigh", ".*_calf"]),
-#                 "threshold": 1.0,
-#             },
-#         )
-
 @configclass
 class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
     """fam B / task B2: stair climb on stairs only (climb-focused)."""
@@ -178,7 +135,7 @@ class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
         gen.sub_terrains["pyramid_stairs_inv"].step_height_range = (0.04, 0.16)
         self.scene.terrain.terrain_generator = gen
 
-        # easier curriculum start
+        # easier curriculum start, matching the successful Apr15 scratch run
         self.scene.terrain.max_init_terrain_level = 1
 
         # straight-forward only
@@ -195,24 +152,34 @@ class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
         self.events.reset_base.params["pose_range"]["yaw"] = (-0.2, 0.2)
 
         rw = self.rewards
-        rw.flat_orientation_l2.weight = -1.5
+        rw.flat_orientation_l2.weight = -2.0
+        rw.track_lin_vel_xy_exp.weight = 1.5
+        rw.track_lin_vel_xy_exp.params["std"] = 0.5
+        rw.track_ang_vel_z_exp.weight = 0.75
+        rw.track_ang_vel_z_exp.params["std"] = 0.5
 
         rw.base_height = RewTerm(
             func=core_mdp.base_height_l2,
             weight=-3.5,
+            # weight=-4.2,
             params={
                 "target_height": 0.42,
+                # "target_height": 0.41,
                 "asset_cfg": SceneEntityCfg("robot"),
                 "sensor_cfg": SceneEntityCfg("height_scanner"),
             },
         )
 
         # discourage extreme joint angles
-        rw.dof_pos_limits.weight = -1.0
+        rw.dof_pos_limits.weight = -2.0
 
-        # Match the old working B2 baseline from 2026-04-15_14-38-36.
-        rw.feet_air_time.weight = 0.02
-        rw.feet_air_time.params["threshold"] = 0.25
+        # Compact Apr15-style bundle: locomotion tracking + posture/contact
+        # penalties. Avoid dense progress rewards here because they encouraged
+        # bounding/hopping solutions that climb but do not walk cleanly.
+        # rw.feet_air_time.weight = 0.02
+        rw.feet_air_time.weight = 0.04
+        # rw.feet_air_time.params["threshold"] = 0.25
+        rw.feet_air_time.params["threshold"] = 0.35
         rw.dof_torques_l2.weight = -2.0e-5
         rw.dof_acc_l2.weight = -2.5e-7
         rw.action_rate_l2.weight = -0.003

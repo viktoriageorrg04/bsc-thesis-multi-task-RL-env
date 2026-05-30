@@ -1,0 +1,57 @@
+{
+  "A1_forward": {
+    "num_episodes": 1024,
+    "success_rate": 0.9892578125,
+    "mean_success_step_ratio": 0.9776255383384084,
+    "mean_lin_vel_error": 0.06772150112306774,
+    "mean_ang_vel_error": 0.09180075090744279,
+    "mean_alive_time_s": 19.982851562500002,
+    "failure_rate": 0.005859375,
+    "train_task": "A2_omni_s2",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0"
+  },
+  "A2_omni": {
+    "num_episodes": 1029,
+    "success_rate": 0.9514091350826045,
+    "mean_success_step_ratio": 0.9596427996496616,
+    "mean_lin_vel_error": 0.07813189630196346,
+    "mean_ang_vel_error": 0.11119933145786985,
+    "mean_alive_time_s": 19.598931000971824,
+    "failure_rate": 0.037900874635568516,
+    "train_task": "A2_omni_s2",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0"
+  },
+  "B1_rough": {
+    "num_episodes": 1025,
+    "success_rate": 0.08487804878048781,
+    "mean_success_step_ratio": 0.5621043350918428,
+    "mean_lin_vel_error": 0.3724670757439886,
+    "mean_ang_vel_error": 0.4287892809356582,
+    "mean_alive_time_s": 7.6877853658536575,
+    "failure_rate": 0.8624390243902439,
+    "train_task": "A2_omni_s2",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0"
+  },
+  "B2_stairs": {
+    "num_episodes": 1025,
+    "success_rate": 0.0,
+    "mean_success_step_ratio": 0.479737585127065,
+    "mean_lin_vel_error": 0.4528006820186814,
+    "mean_ang_vel_error": 0.41527002700250526,
+    "mean_alive_time_s": 6.855707317073171,
+    "failure_rate": 0.9034146341463415,
+    "train_task": "A2_omni_s2",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0"
+  },
+  "C2_gap": {
+    "num_episodes": 1024,
+    "success_rate": 0.1591796875,
+    "mean_success_step_ratio": 0.3619504466565439,
+    "mean_lin_vel_error": 0.46515121131713516,
+    "mean_ang_vel_error": 0.18096207277698678,
+    "mean_alive_time_s": 17.310605468749984,
+    "failure_rate": 0.26171875,
+    "train_task": "A2_omni_s2",
+    "eval_task": "MTL-Custom-Gap-Unitree-Go2-C2-v0"
+  }
+}

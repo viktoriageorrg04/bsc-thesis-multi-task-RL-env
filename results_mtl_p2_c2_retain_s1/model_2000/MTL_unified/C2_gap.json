@@ -1,0 +1,1355 @@
+{
+  "summary": {
+    "num_episodes": 134,
+    "success_rate": 0.40298507462686567,
+    "mean_success_step_ratio": 0.5907213685868559,
+    "mean_lin_vel_error": 0.3300370992736082,
+    "mean_ang_vel_error": 0.13302129868477558,
+    "mean_alive_time_s": 16.93865671641791,
+    "failure_rate": 0.20149253731343283,
+    "train_task": "MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    "eval_task": "MTL-Custom-Gap-Unitree-Go2-C2-v0"
+  },
+  "episodes": [
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.6547619047619048,
+      "mean_lin_vel_error_xy": 0.3249843688238235,
+      "mean_ang_vel_error_z": 0.25003537677583243,
+      "alive_time_s": 1.68,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.7009345794392523,
+      "mean_lin_vel_error_xy": 0.3203755316333236,
+      "mean_ang_vel_error_z": 0.24725496880361966,
+      "alive_time_s": 2.14,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.8348623853211009,
+      "mean_lin_vel_error_xy": 0.21409633181510715,
+      "mean_ang_vel_error_z": 0.1539652938142829,
+      "alive_time_s": 2.18,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.646551724137931,
+      "mean_lin_vel_error_xy": 0.48239395536225416,
+      "mean_ang_vel_error_z": 0.23347851325725688,
+      "alive_time_s": 2.32,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.5966386554621849,
+      "mean_lin_vel_error_xy": 0.4183473346614036,
+      "mean_ang_vel_error_z": 0.17210779270204177,
+      "alive_time_s": 2.38,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.6475409836065574,
+      "mean_lin_vel_error_xy": 0.4092716154504995,
+      "mean_ang_vel_error_z": 0.1785023642368004,
+      "alive_time_s": 2.44,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.8333333333333334,
+      "mean_lin_vel_error_xy": 0.3787794691143614,
+      "mean_ang_vel_error_z": 0.30723707603685785,
+      "alive_time_s": 2.64,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.7518796992481203,
+      "mean_lin_vel_error_xy": 0.33646169103177864,
+      "mean_ang_vel_error_z": 0.2524969918387277,
+      "alive_time_s": 2.66,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.7741935483870968,
+      "mean_lin_vel_error_xy": 0.2789405330534904,
+      "mean_ang_vel_error_z": 0.16193765209567162,
+      "alive_time_s": 3.1,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.7300613496932515,
+      "mean_lin_vel_error_xy": 0.3097898331156538,
+      "mean_ang_vel_error_z": 0.2819050279863042,
+      "alive_time_s": 3.2600000000000002,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.8032786885245902,
+      "mean_lin_vel_error_xy": 0.2359683761179773,
+      "mean_ang_vel_error_z": 0.13569876665626068,
+      "alive_time_s": 3.66,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.4864864864864865,
+      "mean_lin_vel_error_xy": 0.4262223527238176,
+      "mean_ang_vel_error_z": 0.16069003955737965,
+      "alive_time_s": 3.7,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.6051282051282051,
+      "mean_lin_vel_error_xy": 0.4273239526993189,
+      "mean_ang_vel_error_z": 0.22446985489282853,
+      "alive_time_s": 3.9,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.6934673366834171,
+      "mean_lin_vel_error_xy": 0.30905394817716514,
+      "mean_ang_vel_error_z": 0.35337998279974087,
+      "alive_time_s": 3.98,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.6847290640394089,
+      "mean_lin_vel_error_xy": 0.3640732788687269,
+      "mean_ang_vel_error_z": 0.17014560793420952,
+      "alive_time_s": 4.0600000000000005,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.788135593220339,
+      "mean_lin_vel_error_xy": 0.2511945821471133,
+      "mean_ang_vel_error_z": 0.1906181755712477,
+      "alive_time_s": 4.72,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.7446808510638298,
+      "mean_lin_vel_error_xy": 0.3313363798966644,
+      "mean_ang_vel_error_z": 0.2526594121405419,
+      "alive_time_s": 2.82,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.7636363636363637,
+      "mean_lin_vel_error_xy": 0.42267303466796874,
+      "mean_ang_vel_error_z": 0.2790115125251539,
+      "alive_time_s": 3.3000000000000003,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.6757679180887372,
+      "mean_lin_vel_error_xy": 0.3085328710770851,
+      "mean_ang_vel_error_z": 0.18061314345219842,
+      "alive_time_s": 5.86,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.7468354430379747,
+      "mean_lin_vel_error_xy": 0.29202961016304885,
+      "mean_ang_vel_error_z": 0.2855778223351587,
+      "alive_time_s": 1.58,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.6040816326530613,
+      "mean_lin_vel_error_xy": 0.3589376332808514,
+      "mean_ang_vel_error_z": 0.19226057091537788,
+      "alive_time_s": 4.9,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.3039443155452436,
+      "mean_lin_vel_error_xy": 0.5040548019232164,
+      "mean_ang_vel_error_z": 0.1718430308897368,
+      "alive_time_s": 8.620000000000001,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.8156028368794326,
+      "mean_lin_vel_error_xy": 0.289871946294257,
+      "mean_ang_vel_error_z": 0.2930761567244293,
+      "alive_time_s": 2.82,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.3951367781155015,
+      "mean_lin_vel_error_xy": 0.48114166723558605,
+      "mean_ang_vel_error_z": 0.15050601669357902,
+      "alive_time_s": 6.58,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.9638336347197106,
+      "mean_lin_vel_error_xy": 0.11308650729022449,
+      "mean_ang_vel_error_z": 0.10927100293675124,
+      "alive_time_s": 11.06,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.14072229140722292,
+      "mean_lin_vel_error_xy": 0.6295426726192793,
+      "mean_ang_vel_error_z": 0.1781394834981612,
+      "alive_time_s": 16.06,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.9654377880184332,
+      "mean_lin_vel_error_xy": 0.10107965952789728,
+      "mean_ang_vel_error_z": 0.12908794912874424,
+      "alive_time_s": 17.36,
+      "termination_reason": "failure",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.055734619140625,
+      "mean_ang_vel_error_z": 0.08337386322021484,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.08375214385986328,
+      "mean_ang_vel_error_z": 0.1009311752319336,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.08156008911132813,
+      "mean_ang_vel_error_z": 0.08920117950439453,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.992,
+      "mean_lin_vel_error_xy": 0.07093596649169921,
+      "mean_ang_vel_error_z": 0.08498631286621093,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.995,
+      "mean_lin_vel_error_xy": 0.06308330917358398,
+      "mean_ang_vel_error_z": 0.0844415283203125,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.994,
+      "mean_lin_vel_error_xy": 0.05721761322021485,
+      "mean_ang_vel_error_z": 0.0852937240600586,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.08071096801757813,
+      "mean_ang_vel_error_z": 0.08050169372558594,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.994,
+      "mean_lin_vel_error_xy": 0.0679305419921875,
+      "mean_ang_vel_error_z": 0.0884034194946289,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.564,
+      "mean_lin_vel_error_xy": 0.26892404174804685,
+      "mean_ang_vel_error_z": 0.11645536804199219,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.995,
+      "mean_lin_vel_error_xy": 0.05316728973388672,
+      "mean_ang_vel_error_z": 0.0826109161376953,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.0789318618774414,
+      "mean_ang_vel_error_z": 0.0970784912109375,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.05597925567626953,
+      "mean_ang_vel_error_z": 0.0860791015625,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.475,
+      "mean_lin_vel_error_xy": 0.43847528076171877,
+      "mean_ang_vel_error_z": 0.14702084350585937,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.122,
+      "mean_lin_vel_error_xy": 0.6604049682617188,
+      "mean_ang_vel_error_z": 0.12165338134765626,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.048,
+      "mean_lin_vel_error_xy": 0.75334130859375,
+      "mean_ang_vel_error_z": 0.1555817413330078,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.064,
+      "mean_lin_vel_error_xy": 0.6537243041992188,
+      "mean_ang_vel_error_z": 0.08967845916748046,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.994,
+      "mean_lin_vel_error_xy": 0.07639652252197265,
+      "mean_ang_vel_error_z": 0.08362158966064454,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.992,
+      "mean_lin_vel_error_xy": 0.1029082260131836,
+      "mean_ang_vel_error_z": 0.11080770111083985,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.992,
+      "mean_lin_vel_error_xy": 0.09743991088867188,
+      "mean_ang_vel_error_z": 0.09841333770751953,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.09350847625732422,
+      "mean_ang_vel_error_z": 0.09936475372314453,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.994,
+      "mean_lin_vel_error_xy": 0.06691564178466797,
+      "mean_ang_vel_error_z": 0.09457030487060547,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.0751166000366211,
+      "mean_ang_vel_error_z": 0.09946707153320312,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.08601168060302734,
+      "mean_ang_vel_error_z": 0.09633458709716797,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.917,
+      "mean_lin_vel_error_xy": 0.11248406219482422,
+      "mean_ang_vel_error_z": 0.12075079345703126,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.995,
+      "mean_lin_vel_error_xy": 0.07766188049316407,
+      "mean_ang_vel_error_z": 0.09931364440917968,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.994,
+      "mean_lin_vel_error_xy": 0.071117919921875,
+      "mean_ang_vel_error_z": 0.096814208984375,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.992,
+      "mean_lin_vel_error_xy": 0.06654547119140625,
+      "mean_ang_vel_error_z": 0.09515350341796874,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.07990447235107422,
+      "mean_ang_vel_error_z": 0.09608605194091797,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.06872440338134765,
+      "mean_ang_vel_error_z": 0.0906669464111328,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.994,
+      "mean_lin_vel_error_xy": 0.0963446044921875,
+      "mean_ang_vel_error_z": 0.0961856918334961,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.992,
+      "mean_lin_vel_error_xy": 0.06638085174560547,
+      "mean_ang_vel_error_z": 0.09669334411621094,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.976,
+      "mean_lin_vel_error_xy": 0.20678024291992186,
+      "mean_ang_vel_error_z": 0.09394734191894531,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.995,
+      "mean_lin_vel_error_xy": 0.07099993896484375,
+      "mean_ang_vel_error_z": 0.08724584197998046,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.992,
+      "mean_lin_vel_error_xy": 0.06255302429199219,
+      "mean_ang_vel_error_z": 0.08196177673339844,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.763,
+      "mean_lin_vel_error_xy": 0.22802656555175782,
+      "mean_ang_vel_error_z": 0.10273634338378906,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.729,
+      "mean_lin_vel_error_xy": 0.25200209045410155,
+      "mean_ang_vel_error_z": 0.1256814727783203,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.11,
+      "mean_lin_vel_error_xy": 0.5686633911132812,
+      "mean_ang_vel_error_z": 0.10084785461425781,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.06919269561767578,
+      "mean_ang_vel_error_z": 0.08795005035400391,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.07176042175292968,
+      "mean_ang_vel_error_z": 0.10259213256835938,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.07,
+      "mean_lin_vel_error_xy": 0.5437957763671875,
+      "mean_ang_vel_error_z": 0.1259975357055664,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.814,
+      "mean_lin_vel_error_xy": 0.1688103790283203,
+      "mean_ang_vel_error_z": 0.10389762115478515,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.149,
+      "mean_lin_vel_error_xy": 0.53528369140625,
+      "mean_ang_vel_error_z": 0.1281879425048828,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.072,
+      "mean_lin_vel_error_xy": 0.508897216796875,
+      "mean_ang_vel_error_z": 0.11682897186279297,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.281,
+      "mean_lin_vel_error_xy": 0.5084657287597656,
+      "mean_ang_vel_error_z": 0.17323779296875,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.195,
+      "mean_lin_vel_error_xy": 0.5288107299804687,
+      "mean_ang_vel_error_z": 0.18288665771484375,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.992,
+      "mean_lin_vel_error_xy": 0.07792458343505859,
+      "mean_ang_vel_error_z": 0.10574295806884766,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.992,
+      "mean_lin_vel_error_xy": 0.08641045379638672,
+      "mean_ang_vel_error_z": 0.09081845092773437,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.055,
+      "mean_lin_vel_error_xy": 0.6565958251953125,
+      "mean_ang_vel_error_z": 0.15034550476074218,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.992,
+      "mean_lin_vel_error_xy": 0.08938215637207031,
+      "mean_ang_vel_error_z": 0.08569955444335937,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.09687876892089843,
+      "mean_ang_vel_error_z": 0.09377922058105469,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.129,
+      "mean_lin_vel_error_xy": 0.6321253662109375,
+      "mean_ang_vel_error_z": 0.13614903259277344,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.085,
+      "mean_lin_vel_error_xy": 0.49808203125,
+      "mean_ang_vel_error_z": 0.12661064910888672,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.058,
+      "mean_lin_vel_error_xy": 0.7027914428710937,
+      "mean_ang_vel_error_z": 0.09242331695556641,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.081,
+      "mean_lin_vel_error_xy": 0.6575966796875,
+      "mean_ang_vel_error_z": 0.14092164611816407,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.865,
+      "mean_lin_vel_error_xy": 0.18333415222167967,
+      "mean_ang_vel_error_z": 0.12129930877685546,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.063,
+      "mean_lin_vel_error_xy": 0.5518787841796875,
+      "mean_ang_vel_error_z": 0.08992827606201172,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.077,
+      "mean_lin_vel_error_xy": 0.5773832397460937,
+      "mean_ang_vel_error_z": 0.13561592102050782,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.994,
+      "mean_lin_vel_error_xy": 0.08244487762451172,
+      "mean_ang_vel_error_z": 0.09327588653564453,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.1,
+      "mean_lin_vel_error_xy": 0.5754298706054688,
+      "mean_ang_vel_error_z": 0.1363501739501953,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.087,
+      "mean_lin_vel_error_xy": 0.5978201293945312,
+      "mean_ang_vel_error_z": 0.19596693420410155,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.11,
+      "mean_lin_vel_error_xy": 0.65389111328125,
+      "mean_ang_vel_error_z": 0.1417100067138672,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.052,
+      "mean_lin_vel_error_xy": 0.5680921630859375,
+      "mean_ang_vel_error_z": 0.10442093658447266,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.47,
+      "mean_lin_vel_error_xy": 0.46837481689453125,
+      "mean_ang_vel_error_z": 0.12730300903320313,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.536,
+      "mean_lin_vel_error_xy": 0.5068264465332031,
+      "mean_ang_vel_error_z": 0.1385614013671875,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.147,
+      "mean_lin_vel_error_xy": 0.51457958984375,
+      "mean_ang_vel_error_z": 0.08310517120361328,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.07434955596923828,
+      "mean_ang_vel_error_z": 0.09747982025146484,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.112,
+      "mean_lin_vel_error_xy": 0.5130980834960938,
+      "mean_ang_vel_error_z": 0.167444580078125,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.084,
+      "mean_lin_vel_error_xy": 0.6454100952148437,
+      "mean_ang_vel_error_z": 0.13431282043457032,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.501,
+      "mean_lin_vel_error_xy": 0.29813275146484375,
+      "mean_ang_vel_error_z": 0.15147726440429687,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.093,
+      "mean_lin_vel_error_xy": 0.6004821166992188,
+      "mean_ang_vel_error_z": 0.15824400329589844,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.655,
+      "mean_lin_vel_error_xy": 0.4181063537597656,
+      "mean_ang_vel_error_z": 0.07740826416015625,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.054,
+      "mean_lin_vel_error_xy": 0.6206047973632812,
+      "mean_ang_vel_error_z": 0.1515961456298828,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.096,
+      "mean_lin_vel_error_xy": 0.5649638061523438,
+      "mean_ang_vel_error_z": 0.1702859344482422,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.727,
+      "mean_lin_vel_error_xy": 0.28848306274414065,
+      "mean_ang_vel_error_z": 0.12235440826416015,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.104,
+      "mean_lin_vel_error_xy": 0.6578081665039063,
+      "mean_ang_vel_error_z": 0.130472412109375,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.095,
+      "mean_lin_vel_error_xy": 0.51797705078125,
+      "mean_ang_vel_error_z": 0.07335756683349609,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.07292060852050782,
+      "mean_ang_vel_error_z": 0.08345346832275391,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.724,
+      "mean_lin_vel_error_xy": 0.22650564575195312,
+      "mean_ang_vel_error_z": 0.10868933868408204,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.539,
+      "mean_lin_vel_error_xy": 0.4790917663574219,
+      "mean_ang_vel_error_z": 0.0849488525390625,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.455,
+      "mean_lin_vel_error_xy": 0.3278069152832031,
+      "mean_ang_vel_error_z": 0.11739783477783203,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.058,
+      "mean_lin_vel_error_xy": 0.554207763671875,
+      "mean_ang_vel_error_z": 0.11596321868896485,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.073,
+      "mean_lin_vel_error_xy": 0.6068126831054688,
+      "mean_ang_vel_error_z": 0.1570137481689453,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.036,
+      "mean_lin_vel_error_xy": 0.60844189453125,
+      "mean_ang_vel_error_z": 0.17825425720214844,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.167,
+      "mean_lin_vel_error_xy": 0.5596951293945313,
+      "mean_ang_vel_error_z": 0.10290582275390625,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.994,
+      "mean_lin_vel_error_xy": 0.07325521850585938,
+      "mean_ang_vel_error_z": 0.09377105712890625,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.142,
+      "mean_lin_vel_error_xy": 0.4732361755371094,
+      "mean_ang_vel_error_z": 0.1173109359741211,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.996,
+      "mean_lin_vel_error_xy": 0.0760209732055664,
+      "mean_ang_vel_error_z": 0.09277100372314454,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.857,
+      "mean_lin_vel_error_xy": 0.15286834716796874,
+      "mean_ang_vel_error_z": 0.10471210479736329,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.994,
+      "mean_lin_vel_error_xy": 0.0986221923828125,
+      "mean_ang_vel_error_z": 0.10200289916992188,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.994,
+      "mean_lin_vel_error_xy": 0.09865817260742188,
+      "mean_ang_vel_error_z": 0.1090324935913086,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.996,
+      "mean_lin_vel_error_xy": 0.08800129699707031,
+      "mean_ang_vel_error_z": 0.08914915466308594,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.994,
+      "mean_lin_vel_error_xy": 0.06174064254760742,
+      "mean_ang_vel_error_z": 0.07825618743896484,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.296,
+      "mean_lin_vel_error_xy": 0.5061141967773437,
+      "mean_ang_vel_error_z": 0.147448486328125,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.129,
+      "mean_lin_vel_error_xy": 0.513044921875,
+      "mean_ang_vel_error_z": 0.10961518096923828,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.115,
+      "mean_lin_vel_error_xy": 0.5690219116210937,
+      "mean_ang_vel_error_z": 0.1511419219970703,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.555,
+      "mean_lin_vel_error_xy": 0.47079815673828124,
+      "mean_ang_vel_error_z": 0.1768448486328125,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.065,
+      "mean_lin_vel_error_xy": 0.5347139892578125,
+      "mean_ang_vel_error_z": 0.09177174377441406,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.087,
+      "mean_lin_vel_error_xy": 0.5904598999023437,
+      "mean_ang_vel_error_z": 0.15666627502441408,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.449,
+      "mean_lin_vel_error_xy": 0.5583307495117188,
+      "mean_ang_vel_error_z": 0.16786341857910156,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.159,
+      "mean_lin_vel_error_xy": 0.49019354248046876,
+      "mean_ang_vel_error_z": 0.12132001495361328,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.092,
+      "mean_lin_vel_error_xy": 0.5599307861328126,
+      "mean_ang_vel_error_z": 0.12368437957763671,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.106,
+      "mean_lin_vel_error_xy": 0.5811854248046875,
+      "mean_ang_vel_error_z": 0.12894334411621095,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.052,
+      "mean_lin_vel_error_xy": 0.6351226196289063,
+      "mean_ang_vel_error_z": 0.10237472534179687,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.993,
+      "mean_lin_vel_error_xy": 0.07589806365966797,
+      "mean_ang_vel_error_z": 0.09335301208496094,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.112,
+      "mean_lin_vel_error_xy": 0.4787237548828125,
+      "mean_ang_vel_error_z": 0.07970626831054688,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": false,
+      "success_step_ratio": 0.045,
+      "mean_lin_vel_error_xy": 0.6321590576171875,
+      "mean_ang_vel_error_z": 0.15004498291015625,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    },
+    {
+      "episode_success": true,
+      "success_step_ratio": 0.992,
+      "mean_lin_vel_error_xy": 0.08919035339355469,
+      "mean_ang_vel_error_z": 0.08647881317138671,
+      "alive_time_s": 20.0,
+      "termination_reason": "time_out",
+      "task_id": 4,
+      "family_id": 2
+    }
+  ]
+}

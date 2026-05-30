@@ -1,0 +1,57 @@
+{
+  "A1_forward": {
+    "num_episodes": 1025,
+    "success_rate": 0.9892682926829268,
+    "mean_success_step_ratio": 0.9817443409545357,
+    "mean_lin_vel_error": 0.062029637972440016,
+    "mean_ang_vel_error": 0.08691318852467825,
+    "mean_alive_time_s": 19.906868292682926,
+    "failure_rate": 0.00975609756097561,
+    "train_task": "C2_gap_s2",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0"
+  },
+  "A2_omni": {
+    "num_episodes": 1024,
+    "success_rate": 0.060546875,
+    "mean_success_step_ratio": 0.23671282449754386,
+    "mean_lin_vel_error": 0.5714501682235296,
+    "mean_ang_vel_error": 0.478625410542349,
+    "mean_alive_time_s": 11.68609375,
+    "failure_rate": 0.607421875,
+    "train_task": "C2_gap_s2",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0"
+  },
+  "B1_rough": {
+    "num_episodes": 1024,
+    "success_rate": 0.0146484375,
+    "mean_success_step_ratio": 0.21418051385176595,
+    "mean_lin_vel_error": 0.662294174504875,
+    "mean_ang_vel_error": 0.5952311262067452,
+    "mean_alive_time_s": 9.33427734375002,
+    "failure_rate": 0.7080078125,
+    "train_task": "C2_gap_s2",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0"
+  },
+  "B2_stairs": {
+    "num_episodes": 1025,
+    "success_rate": 0.0,
+    "mean_success_step_ratio": 0.6908633518802896,
+    "mean_lin_vel_error": 0.30696008380770035,
+    "mean_ang_vel_error": 0.3098649961111022,
+    "mean_alive_time_s": 4.149190243902442,
+    "failure_rate": 0.9648780487804878,
+    "train_task": "C2_gap_s2",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0"
+  },
+  "C2_gap": {
+    "num_episodes": 1053,
+    "success_rate": 0.8755935422602089,
+    "mean_success_step_ratio": 0.9704600580525506,
+    "mean_lin_vel_error": 0.09182465925939459,
+    "mean_ang_vel_error": 0.10966902363969534,
+    "mean_alive_time_s": 18.73527065527065,
+    "failure_rate": 0.11301044634377967,
+    "train_task": "C2_gap_s2",
+    "eval_task": "MTL-Custom-Gap-Unitree-Go2-C2-v0"
+  }
+}

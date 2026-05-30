@@ -1,0 +1,57 @@
+{
+  "A1_forward": {
+    "num_episodes": 1024,
+    "success_rate": 0.998046875,
+    "mean_success_step_ratio": 0.9346845703125012,
+    "mean_lin_vel_error": 0.10965257911756626,
+    "mean_ang_vel_error": 0.06833910373225811,
+    "mean_alive_time_s": 20.0,
+    "failure_rate": 0.0,
+    "train_task": "MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0"
+  },
+  "A2_omni": {
+    "num_episodes": 1024,
+    "success_rate": 0.962890625,
+    "mean_success_step_ratio": 0.9383400563351209,
+    "mean_lin_vel_error": 0.1421364042862275,
+    "mean_ang_vel_error": 0.10152320782283446,
+    "mean_alive_time_s": 19.86275390625,
+    "failure_rate": 0.015625,
+    "train_task": "MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0"
+  },
+  "B1_rough": {
+    "num_episodes": 1032,
+    "success_rate": 0.9447674418604651,
+    "mean_success_step_ratio": 0.9290461565736604,
+    "mean_lin_vel_error": 0.1761271920481146,
+    "mean_ang_vel_error": 0.1464611368956565,
+    "mean_alive_time_s": 19.378468992248067,
+    "failure_rate": 0.05232558139534884,
+    "train_task": "MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0"
+  },
+  "B2_stairs": {
+    "num_episodes": 1024,
+    "success_rate": 0.3544921875,
+    "mean_success_step_ratio": 0.6390707762226583,
+    "mean_lin_vel_error": 0.37540607967360945,
+    "mean_ang_vel_error": 0.14794608602495088,
+    "mean_alive_time_s": 16.69990234375002,
+    "failure_rate": 0.4296875,
+    "train_task": "MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0"
+  },
+  "C2_gap": {
+    "num_episodes": 1024,
+    "success_rate": 0.4267578125,
+    "mean_success_step_ratio": 0.6289643161849504,
+    "mean_lin_vel_error": 0.33756141125304684,
+    "mean_ang_vel_error": 0.13820775972618454,
+    "mean_alive_time_s": 17.198808593750005,
+    "failure_rate": 0.19921875,
+    "train_task": "MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    "eval_task": "MTL-Custom-Gap-Unitree-Go2-C2-v0"
+  }
+}

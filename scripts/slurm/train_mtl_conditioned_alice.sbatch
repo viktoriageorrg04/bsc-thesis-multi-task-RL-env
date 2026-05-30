@@ -29,7 +29,7 @@
 set -euo pipefail
 
 SEEDS=(0 1 2)
-SEED=${SEEDS[$SLURM_ARRAY_TASK_ID]}
+SEED="${SEED:-${SEEDS[$SLURM_ARRAY_TASK_ID]}}"
 
 module load cuDNN/8.9.7.29-CUDA-12.3.2
 
@@ -53,6 +53,8 @@ echo "[INFO] Num envs: ${NUM_ENVS:-4096}"
 echo "[INFO] Max iterations: ${MAX_ITERATIONS:-3000}"
 echo "[INFO] Phase profile: ${PHASE_PROFILE:-default}"
 echo "[INFO] Sampling strategy: ${SAMPLING_STRATEGY:-uniform}"
+echo "[INFO] Focus terrain: ${FOCUS_TERRAIN:-}"
+echo "[INFO] Focus prob: ${FOCUS_PROB:-}"
 echo "[INFO] Custom terrain probs: ${CUSTOM_TERRAIN_PROBS:-}"
 echo "[INFO] Pretrained checkpoint: ${PRETRAINED_CHECKPOINT:-}"
 
@@ -64,6 +66,12 @@ if [[ -n "${CUSTOM_TERRAIN_PROBS:-}" ]]; then
   # shellcheck disable=SC2206
   TERRAIN_PROBS=(${CUSTOM_TERRAIN_PROBS})
   EXTRA_ARGS+=(--custom_terrain_probs "${TERRAIN_PROBS[@]}")
+fi
+if [[ -n "${FOCUS_TERRAIN:-}" ]]; then
+  EXTRA_ARGS+=(--focus_terrain "$FOCUS_TERRAIN")
+fi
+if [[ -n "${FOCUS_PROB:-}" ]]; then
+  EXTRA_ARGS+=(--focus_prob "$FOCUS_PROB")
 fi
 if [[ "${MTL_PROFILE:-garage}" != "default" ]]; then
   EXTRA_ARGS+=(--mtl_profile "${MTL_PROFILE:-garage}")

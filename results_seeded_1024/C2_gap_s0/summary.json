@@ -1,0 +1,57 @@
+{
+  "A1_forward": {
+    "num_episodes": 1024,
+    "success_rate": 0.9912109375,
+    "mean_success_step_ratio": 0.9810065675126196,
+    "mean_lin_vel_error": 0.07685678416377847,
+    "mean_ang_vel_error": 0.09673822571009814,
+    "mean_alive_time_s": 19.90978515625,
+    "failure_rate": 0.0087890625,
+    "train_task": "C2_gap_s0",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0"
+  },
+  "A2_omni": {
+    "num_episodes": 1025,
+    "success_rate": 0.09951219512195122,
+    "mean_success_step_ratio": 0.31585691622943846,
+    "mean_lin_vel_error": 0.5118985444818562,
+    "mean_ang_vel_error": 0.4971611720662498,
+    "mean_alive_time_s": 11.200253658536575,
+    "failure_rate": 0.6546341463414634,
+    "train_task": "C2_gap_s0",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0"
+  },
+  "B1_rough": {
+    "num_episodes": 1024,
+    "success_rate": 0.05859375,
+    "mean_success_step_ratio": 0.283509136347325,
+    "mean_lin_vel_error": 0.5987865839150985,
+    "mean_ang_vel_error": 0.6018530439701957,
+    "mean_alive_time_s": 9.620683593749993,
+    "failure_rate": 0.7373046875,
+    "train_task": "C2_gap_s0",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0"
+  },
+  "B2_stairs": {
+    "num_episodes": 1024,
+    "success_rate": 0.0703125,
+    "mean_success_step_ratio": 0.613753253385508,
+    "mean_lin_vel_error": 0.3617360956651991,
+    "mean_ang_vel_error": 0.2127042676357936,
+    "mean_alive_time_s": 8.695527343750001,
+    "failure_rate": 0.8779296875,
+    "train_task": "C2_gap_s0",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0"
+  },
+  "C2_gap": {
+    "num_episodes": 1024,
+    "success_rate": 0.8564453125,
+    "mean_success_step_ratio": 0.9755941862307851,
+    "mean_lin_vel_error": 0.09560081293127515,
+    "mean_ang_vel_error": 0.12099744979448757,
+    "mean_alive_time_s": 18.072089843750003,
+    "failure_rate": 0.142578125,
+    "train_task": "C2_gap_s0",
+    "eval_task": "MTL-Custom-Gap-Unitree-Go2-C2-v0"
+  }
+}

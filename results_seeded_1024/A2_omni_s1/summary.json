@@ -1,0 +1,57 @@
+{
+  "A1_forward": {
+    "num_episodes": 1024,
+    "success_rate": 0.9892578125,
+    "mean_success_step_ratio": 0.9793964843750014,
+    "mean_lin_vel_error": 0.06449417519196876,
+    "mean_ang_vel_error": 0.09422246904671194,
+    "mean_alive_time_s": 20.0,
+    "failure_rate": 0.0,
+    "train_task": "A2_omni_s1",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0"
+  },
+  "A2_omni": {
+    "num_episodes": 1025,
+    "success_rate": 0.96,
+    "mean_success_step_ratio": 0.9592309676735875,
+    "mean_lin_vel_error": 0.07641182111446942,
+    "mean_ang_vel_error": 0.10757578692742908,
+    "mean_alive_time_s": 19.75480975609756,
+    "failure_rate": 0.023414634146341463,
+    "train_task": "A2_omni_s1",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0"
+  },
+  "B1_rough": {
+    "num_episodes": 1024,
+    "success_rate": 0.0576171875,
+    "mean_success_step_ratio": 0.5206050471959043,
+    "mean_lin_vel_error": 0.40125525574841137,
+    "mean_ang_vel_error": 0.4850732819871944,
+    "mean_alive_time_s": 7.4072070312500005,
+    "failure_rate": 0.869140625,
+    "train_task": "A2_omni_s1",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0"
+  },
+  "B2_stairs": {
+    "num_episodes": 1027,
+    "success_rate": 0.0,
+    "mean_success_step_ratio": 0.12323609901554568,
+    "mean_lin_vel_error": 0.6049875638317905,
+    "mean_ang_vel_error": 0.3828699992236559,
+    "mean_alive_time_s": 19.743758519961048,
+    "failure_rate": 0.035053554040895815,
+    "train_task": "A2_omni_s1",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0"
+  },
+  "C2_gap": {
+    "num_episodes": 1024,
+    "success_rate": 0.1328125,
+    "mean_success_step_ratio": 0.3779973382861317,
+    "mean_lin_vel_error": 0.4559088811361737,
+    "mean_ang_vel_error": 0.2364814149167813,
+    "mean_alive_time_s": 14.392031249999995,
+    "failure_rate": 0.4541015625,
+    "train_task": "A2_omni_s1",
+    "eval_task": "MTL-Custom-Gap-Unitree-Go2-C2-v0"
+  }
+}

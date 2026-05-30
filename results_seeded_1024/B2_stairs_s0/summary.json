@@ -1,0 +1,57 @@
+{
+  "A1_forward": {
+    "num_episodes": 1027,
+    "success_rate": 0.9425511197663097,
+    "mean_success_step_ratio": 0.9769811644396137,
+    "mean_lin_vel_error": 0.07544084307302122,
+    "mean_ang_vel_error": 0.10253430067438737,
+    "mean_alive_time_s": 19.514508276533594,
+    "failure_rate": 0.05744888023369036,
+    "train_task": "B2_stairs_s0",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0"
+  },
+  "A2_omni": {
+    "num_episodes": 1024,
+    "success_rate": 0.0048828125,
+    "mean_success_step_ratio": 0.09495377529430098,
+    "mean_lin_vel_error": 0.6101627683162774,
+    "mean_ang_vel_error": 0.6719005792183054,
+    "mean_alive_time_s": 15.967226562499999,
+    "failure_rate": 0.4423828125,
+    "train_task": "B2_stairs_s0",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0"
+  },
+  "B1_rough": {
+    "num_episodes": 1024,
+    "success_rate": 0.001953125,
+    "mean_success_step_ratio": 0.08867452998323035,
+    "mean_lin_vel_error": 0.6378796484460918,
+    "mean_ang_vel_error": 0.698640171354772,
+    "mean_alive_time_s": 16.78445312499998,
+    "failure_rate": 0.3427734375,
+    "train_task": "B2_stairs_s0",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0"
+  },
+  "B2_stairs": {
+    "num_episodes": 1024,
+    "success_rate": 1.0,
+    "mean_success_step_ratio": 0.9929521484375053,
+    "mean_lin_vel_error": 0.07904977381229404,
+    "mean_ang_vel_error": 0.10100570271909229,
+    "mean_alive_time_s": 20.0,
+    "failure_rate": 0.0,
+    "train_task": "B2_stairs_s0",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0"
+  },
+  "C2_gap": {
+    "num_episodes": 1041,
+    "success_rate": 0.356388088376561,
+    "mean_success_step_ratio": 0.5592426318122465,
+    "mean_lin_vel_error": 0.36242026927259363,
+    "mean_ang_vel_error": 0.2013150004906033,
+    "mean_alive_time_s": 16.17734870317004,
+    "failure_rate": 0.2920268972142171,
+    "train_task": "B2_stairs_s0",
+    "eval_task": "MTL-Custom-Gap-Unitree-Go2-C2-v0"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "A1_forward": {
+    "num_episodes": 1031,
+    "success_rate": 0.9660523763336566,
+    "mean_success_step_ratio": 0.9777433939208878,
+    "mean_lin_vel_error": 0.07043795972989339,
+    "mean_ang_vel_error": 0.09132828885577654,
+    "mean_alive_time_s": 19.612919495635307,
+    "failure_rate": 0.03394762366634336,
+    "train_task": "C2_gap_s1",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0"
+  },
+  "A2_omni": {
+    "num_episodes": 1024,
+    "success_rate": 0.064453125,
+    "mean_success_step_ratio": 0.2994797269643254,
+    "mean_lin_vel_error": 0.5040527565336735,
+    "mean_ang_vel_error": 0.5099080890447351,
+    "mean_alive_time_s": 9.687558593750001,
+    "failure_rate": 0.7783203125,
+    "train_task": "C2_gap_s1",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0"
+  },
+  "B1_rough": {
+    "num_episodes": 1024,
+    "success_rate": 0.046875,
+    "mean_success_step_ratio": 0.3023756079919002,
+    "mean_lin_vel_error": 0.5740083099869066,
+    "mean_ang_vel_error": 0.5929078141776774,
+    "mean_alive_time_s": 8.792753906249994,
+    "failure_rate": 0.8076171875,
+    "train_task": "C2_gap_s1",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0"
+  },
+  "B2_stairs": {
+    "num_episodes": 1024,
+    "success_rate": 0.07421875,
+    "mean_success_step_ratio": 0.6231778410146857,
+    "mean_lin_vel_error": 0.35898908769225923,
+    "mean_ang_vel_error": 0.2235403218241838,
+    "mean_alive_time_s": 10.040761718749998,
+    "failure_rate": 0.83203125,
+    "train_task": "C2_gap_s1",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0"
+  },
+  "C2_gap": {
+    "num_episodes": 1026,
+    "success_rate": 0.9658869395711501,
+    "mean_success_step_ratio": 0.9859921720889632,
+    "mean_lin_vel_error": 0.07738789934151835,
+    "mean_ang_vel_error": 0.10065788853823283,
+    "mean_alive_time_s": 19.61931773879142,
+    "failure_rate": 0.03216374269005848,
+    "train_task": "C2_gap_s1",
+    "eval_task": "MTL-Custom-Gap-Unitree-Go2-C2-v0"
+  }
+}

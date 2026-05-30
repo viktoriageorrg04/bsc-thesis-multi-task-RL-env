@@ -75,12 +75,10 @@ def _apply_c2_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
     rw.track_lin_vel_xy_exp.weight = 2.0
     rw.track_ang_vel_z_exp.weight = 1.0
 
-    # stepping incentive (threshold lowered from default 0.5 to 0.25 —
-    # at walking speed 0.4-0.8 m/s a normal trot step has ~0.3s swing,
-    # which is above 0.25 but below the default 0.5, so the default
-    # penalizes normal walking and rewards only unrealistically slow steps)
-    rw.feet_air_time.weight = 0.5
-    rw.feet_air_time.params["threshold"] = 0.25
+    # Keep only a mild stepping incentive.  A large feet-air-time weight can
+    # be exploited by holding a rear leg in the air while still moving forward.
+    rw.feet_air_time.weight = 0.08
+    rw.feet_air_time.params["threshold"] = 0.20
 
     # penalize thigh/calf ground contact
     rw.undesired_contacts = RewTerm(
@@ -106,6 +104,7 @@ def _apply_c2_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
 
     # torque penalty
     rw.dof_torques_l2.weight = -1.0e-5
+    rw.dof_pos_limits.weight = -0.5
 
 
 @configclass

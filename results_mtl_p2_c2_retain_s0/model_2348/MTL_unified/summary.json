@@ -1,0 +1,57 @@
+{
+  "A1_forward": {
+    "num_episodes": 128,
+    "success_rate": 1.0,
+    "mean_success_step_ratio": 0.9776953124999992,
+    "mean_lin_vel_error": 0.08366058564186095,
+    "mean_ang_vel_error": 0.06045017653703687,
+    "mean_alive_time_s": 20.0,
+    "failure_rate": 0.0,
+    "train_task": "MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0"
+  },
+  "A2_omni": {
+    "num_episodes": 128,
+    "success_rate": 0.890625,
+    "mean_success_step_ratio": 0.9189444594368055,
+    "mean_lin_vel_error": 0.13454393770475886,
+    "mean_ang_vel_error": 0.10620543534717446,
+    "mean_alive_time_s": 19.7975,
+    "failure_rate": 0.0234375,
+    "train_task": "MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0"
+  },
+  "B1_rough": {
+    "num_episodes": 128,
+    "success_rate": 0.875,
+    "mean_success_step_ratio": 0.898154067318852,
+    "mean_lin_vel_error": 0.18534748057209896,
+    "mean_ang_vel_error": 0.14845322432891622,
+    "mean_alive_time_s": 19.193593749999998,
+    "failure_rate": 0.078125,
+    "train_task": "MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0"
+  },
+  "B2_stairs": {
+    "num_episodes": 128,
+    "success_rate": 0.7265625,
+    "mean_success_step_ratio": 0.8062421491887799,
+    "mean_lin_vel_error": 0.26350513766575784,
+    "mean_ang_vel_error": 0.1308136748601371,
+    "mean_alive_time_s": 18.7753125,
+    "failure_rate": 0.203125,
+    "train_task": "MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0"
+  },
+  "C2_gap": {
+    "num_episodes": 130,
+    "success_rate": 0.7,
+    "mean_success_step_ratio": 0.8441356310252811,
+    "mean_lin_vel_error": 0.1874297528561787,
+    "mean_ang_vel_error": 0.10173738299782903,
+    "mean_alive_time_s": 18.18,
+    "failure_rate": 0.14615384615384616,
+    "train_task": "MTL-Conditioned-Unitree-Go2-AllTerrains-v0",
+    "eval_task": "MTL-Custom-Gap-Unitree-Go2-C2-v0"
+  }
+}

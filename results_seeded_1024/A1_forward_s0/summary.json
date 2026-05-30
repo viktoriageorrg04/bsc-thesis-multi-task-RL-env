@@ -1,0 +1,57 @@
+{
+  "A1_forward": {
+    "num_episodes": 1024,
+    "success_rate": 0.9970703125,
+    "mean_success_step_ratio": 0.9867632011842348,
+    "mean_lin_vel_error": 0.03599468510969325,
+    "mean_ang_vel_error": 0.0518292755916485,
+    "mean_alive_time_s": 19.9805078125,
+    "failure_rate": 0.0029296875,
+    "train_task": "A1_forward_s0",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-v0"
+  },
+  "A2_omni": {
+    "num_episodes": 1028,
+    "success_rate": 0.005836575875486381,
+    "mean_success_step_ratio": 0.10147531426682109,
+    "mean_lin_vel_error": 0.6074641103658178,
+    "mean_ang_vel_error": 0.6350932379462175,
+    "mean_alive_time_s": 19.514747081712063,
+    "failure_rate": 0.05933852140077821,
+    "train_task": "A1_forward_s0",
+    "eval_task": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-v0"
+  },
+  "B1_rough": {
+    "num_episodes": 1025,
+    "success_rate": 0.000975609756097561,
+    "mean_success_step_ratio": 0.05652559797923986,
+    "mean_lin_vel_error": 0.7235127226615361,
+    "mean_ang_vel_error": 0.752049956707578,
+    "mean_alive_time_s": 12.303765853658534,
+    "failure_rate": 0.6058536585365853,
+    "train_task": "A1_forward_s0",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-v0"
+  },
+  "B2_stairs": {
+    "num_episodes": 1024,
+    "success_rate": 0.0,
+    "mean_success_step_ratio": 0.1988594459602058,
+    "mean_lin_vel_error": 0.5872721640145832,
+    "mean_ang_vel_error": 0.2895226450026919,
+    "mean_alive_time_s": 16.986582031250002,
+    "failure_rate": 0.2353515625,
+    "train_task": "A1_forward_s0",
+    "eval_task": "MTL-Velocity-Rough-Unitree-Go2-B2-StairClimb-v0"
+  },
+  "C2_gap": {
+    "num_episodes": 1065,
+    "success_rate": 0.14084507042253522,
+    "mean_success_step_ratio": 0.32087639234069154,
+    "mean_lin_vel_error": 0.4834774478364638,
+    "mean_ang_vel_error": 0.15912650682690313,
+    "mean_alive_time_s": 18.856563380281695,
+    "failure_rate": 0.07981220657276995,
+    "train_task": "A1_forward_s0",
+    "eval_task": "MTL-Custom-Gap-Unitree-Go2-C2-v0"
+  }
+}
