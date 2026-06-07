@@ -1,0 +1,6 @@
+train_task,mean_over_eval_tasks,std_over_eval_tasks
+A1_forward,0.368188,0.321167
+A2_omni,0.367325,0.354165
+B1_rough,0.242882,0.378426
+B2_stairs,0.221449,0.175608
+C2_gap,0.487226,0.401270

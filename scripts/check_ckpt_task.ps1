@@ -112,24 +112,24 @@ if ($stdMatch.Success) {
 }
 
 Write-Host "=== Checkpoint/Run Task Info ==="
-Write-Host "Run dir          : $runDir"
-Write-Host "Experiment family: $family"
-Write-Host "Run name         : $runName"
-Write-Host "Task guess       : $taskGuess"
-Write-Host "Confidence       : $confidence"
-Write-Host "env.yaml         : $envPath"
+Write-Host "Run dir : $runDir"
+Write-Host "Experiment family : $family"
+Write-Host "Run name : $runName"
+Write-Host "Task guess : $taskGuess"
+Write-Host "Confidence : $confidence"
+Write-Host "env.yaml : $envPath"
 if (Test-Path -LiteralPath $agentPath) {
-    Write-Host "agent.yaml       : $agentPath"
+    Write-Host "agent.yaml : $agentPath"
 }
 if (Test-Path -LiteralPath $samplingPath) {
     Write-Host "sampling_profile : $samplingPath"
 }
 if ($linVelY) {
-    Write-Host ("lin_vel_y range  : [{0}, {1}]" -f $linVelY.min, $linVelY.max)
+    Write-Host ("lin_vel_y range : [{0}, {1}]" -f $linVelY.min, $linVelY.max)
 }
 if ($angVelZ) {
-    Write-Host ("ang_vel_z range  : [{0}, {1}]" -f $angVelZ.min, $angVelZ.max)
+    Write-Host ("ang_vel_z range : [{0}, {1}]" -f $angVelZ.min, $angVelZ.max)
 }
 if ($stdType) {
-    Write-Host "std_type         : $stdType"
+    Write-Host "std_type : $stdType"
 }

@@ -143,9 +143,9 @@ class EpisodeStatsTracker:
 
 
 # fam success config
-# - A1/A2 (flat): tighter thresholds; robot should track precisely
-# - B1/B2 (rough): looser; velocity spikes during terrain traversal
-# - C2 (custom): loosest; deliberate stepping, pauses, recovery
+# A1/A2 (flat): tighter thresholds; robot should track precisely
+# B1/B2 (rough): looser; velocity spikes during terrain traversal
+# C2 (custom): loosest; deliberate stepping, pauses, recovery
 
 TASK_SUCCESS_CONFIGS: dict[str, SuccessConfig] = {
     # fam A: flat velocity

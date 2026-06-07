@@ -1,0 +1,6 @@
+train_task,A1_forward,A2_omni,B1_rough,B2_stairs,C2_gap
+A1_forward,3,3,3,3,3
+A2_omni,3,3,3,3,3
+B1_rough,3,3,3,3,3
+B2_stairs,3,3,3,3,3
+C2_gap,3,3,3,3,3

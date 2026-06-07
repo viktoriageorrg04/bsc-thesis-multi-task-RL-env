@@ -1,11 +1,11 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 
-REM Cross-evaluate completed seeded single-task checkpoints.
-REM Usage:
+REM cross-eval completed seeded single-task checkpoints
+REM usage:
 REM   scripts\eval_completed_seeded.cmd [num_envs] [num_episodes] [output_dir]
 REM
-REM Recommended credible run:
+REM recommended credible run:
 REM   scripts\eval_completed_seeded.cmd 256 1024 results_seeded_1024
 
 set "NUM_ENVS=%~1"

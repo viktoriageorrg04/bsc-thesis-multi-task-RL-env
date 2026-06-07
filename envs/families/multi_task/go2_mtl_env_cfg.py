@@ -34,9 +34,7 @@ from envs.families.rough_velocity.go2_fam_b_env_cfg import Go2B1RoughWalkEnvCfg,
 _TASK_ORDER = ("flat", "random_rough", "pyramid_stairs_inv", "gap")
 _TASK_CFG_TYPES = (Go2A2OmniWalkEnvCfg, Go2B1RoughWalkEnvCfg, Go2B2StairClimbEnvCfg, Go2C2GapCrossingEnvCfg)
 
-# ── terrain generator ──────────────────────────────────────────────────────────
-# 4 sub-terrains, equal 25% proportion.  Difficulty ranges match single-task
-# baselines so the multi-task policy faces equivalent challenges.
+# terrain gen
 
 _MTL_TERRAIN_GEN = TerrainGeneratorCfg(
     size=(8.0, 8.0),
@@ -56,16 +54,14 @@ _MTL_TERRAIN_GEN = TerrainGeneratorCfg(
             noise_step=0.01,
             border_width=0.25,
         ),
-        # random rough (fam B1) — matches Go2 rough env scaling
+        # random rough (fam B1)
         "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
             proportion=0.25,
             noise_range=(0.01, 0.06),
             noise_step=0.01,
             border_width=0.25,
         ),
-        # pyramid stairs (fam B2) — matches Go2-scaled step heights
-        # Inverted stairs match the single-task B2 setup: forward motion from
-        # spawn climbs uphill.
+        # pyramid stairs (fam B2)
         "pyramid_stairs_inv": terrain_gen.MeshInvertedPyramidStairsTerrainCfg(
             proportion=0.25,
             step_height_range=(0.04, 0.16),
@@ -74,7 +70,7 @@ _MTL_TERRAIN_GEN = TerrainGeneratorCfg(
             border_width=1.0,
             holes=False,
         ),
-        # gap crossing (fam C2) — matches single-task gap config
+        # gap crossing (fam C2)
         "gap": terrain_gen.MeshGapTerrainCfg(
             proportion=0.25,
             gap_width_range=(0.0, 0.20),
@@ -209,9 +205,7 @@ def _apply_command_profile(ranges: tuple[dict[str, object], ...], profile: str) 
 
     profiled = [dict(r) for r in ranges]
     if profile == "p1_b2_easy":
-        # Corrected inverted stairs need an easy forward bridge before p1_mixed.
-        # Keep non-stair tasks close to p0 so the policy rehearses locomotion
-        # without competing with the stair skill acquisition.
+        # an easy forward bridge before p1_mixed (corrected inverted stairs)
         for task_index in (0, 1):
             profiled[task_index].update(
                 {
@@ -228,8 +222,8 @@ def _apply_command_profile(ranges: tuple[dict[str, object], ...], profile: str) 
         return tuple(profiled)
 
     if profile == "p1_b2_stepup":
-        # First successful contact/step-up bridge: slower than benchmark B2,
-        # but faster than p1_b2_easy and explicitly aimed at entering stairs.
+        # first successful contact/step-up bridge: slower than benchmark B2,
+        # but faster than p1_b2_easy and aimed at entering stairs
         for task_index in (0, 1):
             profiled[task_index].update(
                 {
@@ -246,8 +240,7 @@ def _apply_command_profile(ranges: tuple[dict[str, object], ...], profile: str) 
         return tuple(profiled)
 
     if profile == "p1_b2_ramp":
-        # Targeted bridge from p0/easy stairs into the benchmark-speed B2 command
-        # band.  Keep rehearsal commands modest so stairs own the update signal.
+        # targeted bridge from p0/easy stairs into the benchmark speed cmd
         for task_index in (0, 1):
             profiled[task_index].update(
                 {
@@ -259,13 +252,12 @@ def _apply_command_profile(ranges: tuple[dict[str, object], ...], profile: str) 
                     "standing": 0.0,
                 }
             )
-        profiled[2].update({"lin_x": (0.35, 0.75), "lin_y": (0.0, 0.0), "yaw": (0.0, 0.0), "heading": False, "standing": 0.0})
+        profiled[2].update({"lin_x": (0.40, 0.90), "lin_y": (0.0, 0.0), "yaw": (0.0, 0.0), "heading": False, "standing": 0.0})
         profiled[3].update({"lin_x": (0.3, 0.6), "lin_y": (-0.05, 0.05), "yaw": (-0.1, 0.1), "heading": False, "standing": 0.0})
         return tuple(profiled)
 
     if profile == "p1_omni":
-        # Bridge from p1_mixed toward the A2/B1 full-omni benchmark without
-        # jumping directly to heading-command targets.
+        # bridge from p1_mixed toward the A2/B1 full-omni benchmark
         for task_index in (0, 1):
             profiled[task_index].update(
                 {
@@ -282,9 +274,7 @@ def _apply_command_profile(ranges: tuple[dict[str, object], ...], profile: str) 
         return tuple(profiled)
 
     if profile == "p2_b2safe":
-        # Balanced recovery after B2 has been learned.  A2/B1 need wide omni
-        # commands, C2 needs rehearsal, while B2 keeps a benchmark-ish forward
-        # band instead of being overwritten by broad omni recovery.
+        # balanced recovery after B2 has been learned
         for task_index in (0, 1):
             profiled[task_index].update(
                 {
@@ -296,12 +286,12 @@ def _apply_command_profile(ranges: tuple[dict[str, object], ...], profile: str) 
                     "standing": 0.0,
                 }
             )
-        profiled[2].update({"lin_x": (0.35, 0.75), "lin_y": (0.0, 0.0), "yaw": (0.0, 0.0), "heading": False, "standing": 0.0})
+        profiled[2].update({"lin_x": (0.40, 0.90), "lin_y": (0.0, 0.0), "yaw": (0.0, 0.0), "heading": False, "standing": 0.0})
         profiled[3].update({"lin_x": (0.35, 0.75), "lin_y": (-0.1, 0.1), "yaw": (-0.2, 0.2), "heading": False, "standing": 0.0})
         return tuple(profiled)
 
     if profile == "p1_mixed":
-        # Intermediate command curriculum: wider than p0_gait, still easier than full omni commands.
+        # intermediate cmd curriculum
         for task_index in (0, 1):
             profiled[task_index].update(
                 {
@@ -317,7 +307,7 @@ def _apply_command_profile(ranges: tuple[dict[str, object], ...], profile: str) 
         profiled[3].update({"lin_x": (0.4, 0.8), "lin_y": (-0.08, 0.08), "yaw": (-0.15, 0.15), "heading": False, "standing": 0.0})
         return tuple(profiled)
 
-    # Bootstrap gait learning before asking the policy to solve full omni commands.
+    # bootstrap gait learning before asking the policy to solve full omni cmds
     for task_index in (0, 1):
         profiled[task_index].update(
             {
@@ -329,7 +319,6 @@ def _apply_command_profile(ranges: tuple[dict[str, object], ...], profile: str) 
                 "standing": 0.0,
             }
         )
-    # Keep terrain-specific tasks forward-biased but slightly easier at bootstrap.
     profiled[2].update({"lin_x": (0.35, 0.7), "lin_y": (0.0, 0.0), "yaw": (0.0, 0.0), "heading": False, "standing": 0.0})
     profiled[3].update({"lin_x": (0.35, 0.7), "lin_y": (-0.05, 0.05), "yaw": (-0.1, 0.1), "heading": False, "standing": 0.0})
     return tuple(profiled)
@@ -467,7 +456,7 @@ def _apply_mtl_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
     rw.track_lin_vel_xy_exp.weight = 2.0
     rw.track_ang_vel_z_exp.weight = 1.0
 
-    # stepping incentive (Go2 default is 0.01 — kills stepping)
+    # stepping incentive (Go2 default is 0.01; kills stepping)
     rw.feet_air_time.weight = 0.25
 
     # penalize thigh + calf ground contacts
@@ -607,8 +596,7 @@ def _apply_task_conditioned_commands(cfg: UnitreeGo2RoughEnvCfg) -> None:
     cmd.rel_heading_envs = 1.0
     cmd.rel_standing_envs = 0.0
 
-    # Broad fallback and heading-control clip limits. Actual samples are drawn
-    # from the single-task configs in TaskConditionedVelocityCommand.
+    # fallback and heading-control clip limits
     cmd.ranges.lin_vel_x = (-1.0, 1.0)
     cmd.ranges.lin_vel_y = (-1.0, 1.0)
     cmd.ranges.ang_vel_z = (-1.0, 1.0)
@@ -638,7 +626,7 @@ class Go2MultiTaskEnvCfg(UnitreeGo2RoughEnvCfg):
         # B1-proven reward set
         _apply_mtl_rewards(self)
 
-        # commands (union of all single-task profiles)
+        # cmds (union of all single-task profiles)
         cmd = self.commands.base_velocity
         cmd.heading_command = True
         cmd.rel_heading_envs = 1.0
@@ -677,13 +665,9 @@ class Go2MultiTaskConditionedEnvCfg(Go2MultiTaskEnvCfg):
         _apply_task_conditioned_commands(self)
         self.observations.policy.task_id = ObsTerm(func=_mtl_task_one_hot)
 
-        # Forward-only stair/gap tasks assume the robot's forward axis is
-        # aligned with terrain progression, as in the single-task B2 setup.
+        # forward-only stair/gap tasks
         self.events.reset_base.params["pose_range"]["yaw"] = (-0.2, 0.2)
 
-        # Do not initialize the mixed curriculum halfway up the difficulty
-        # ladder. Let the terrain curriculum raise levels after the policy can
-        # stand and track basic commands.
         self.scene.terrain.max_init_terrain_level = 1
 
 

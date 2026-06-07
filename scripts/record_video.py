@@ -20,14 +20,7 @@ _PROJ = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 
 _ROUGH_ROOT = os.path.join(_PROJ, "logs", "rsl_rl", "unitree_go2_rough")
 
-# All 5 tasks now share unitree_go2_rough (A1/A2 rebuilt on RoughPPORunnerCfg).
-# B1/B2/C2 and A1 use explicit log_dir (runs are complete).
-# A2: uses log_root + discriminator once retrained.
-#   A1 uniquely logs Episode_Reward/stand_still.
-#   A2 has neither stand_still nor undesired_contacts (unlike B1/B2/C2).
 TASKS = {
-    # Use follow-camera for flat tasks too; static world camera can drift off-subject
-    # and produce sky/blue-only clips in some runs.
     "A1": {"play_id": "MTL-Velocity-Flat-Unitree-Go2-A1-Forward-Play-v0", "log_dir":  os.path.join(_ROUGH_ROOT, "2026-04-09_01-42-49"), "follow": True, "eye": [1, -5, 3], "lookat": [1, 0, 0]},
     "A2": {"play_id": "MTL-Velocity-Flat-Unitree-Go2-A2-Omni-Play-v0", "log_dir": os.path.join(_ROUGH_ROOT, "2026-04-09_11-10-20"), "follow": True, "eye": [0, -5, 3], "lookat": [0, 0, 0]},
     "B1": {"play_id": "MTL-Velocity-Rough-Unitree-Go2-B1-RoughWalk-Play-v0", "log_dir":  os.path.join(_ROUGH_ROOT, "2026-03-31_17-54-23"), "follow": True},

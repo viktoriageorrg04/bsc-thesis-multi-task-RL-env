@@ -22,7 +22,7 @@ TASK_TIMEOUT_SEC="${TASK_TIMEOUT_SEC:-900}"
 MAX_RETRIES="${MAX_RETRIES:-1}"
 RETRY_DELAY_SEC="${RETRY_DELAY_SEC:-5}"
 
-# You can override this from the shell:
+# you can override this from the shell
 #   ISAACLAB_BAT=/c/Users/<user>/.../IsaacLab/isaaclab.bat bash scripts/cross_eval.sh ...
 if [[ -z "${ISAACLAB_BAT:-}" ]]; then
     if [[ -f "/c/Users/pavel/OneDrive/Desktop/IsaacLab/isaaclab.bat" ]]; then
@@ -204,13 +204,13 @@ run_eval_task_once() {
         artifact_updated=1
     fi
 
-    # Some launcher setups return non-zero despite writing the expected artifact for this run.
+    # some launcher setups return non-zero despite writing the expected artifact for this run
     if [[ "${rc}" -ne 0 ]] && [[ "${artifact_updated}" -eq 1 ]]; then
         echo ">>> ${task}: command returned ${rc}, but found ${expected_json}. Treating as success." >&2
         rc=0
     fi
 
-    # Guard against false success (launcher returns zero even when eval failed early).
+    # guard against false success (launcher returns zero even when eval failed early)
     if [[ "${rc}" -eq 0 ]] && [[ "${artifact_updated}" -eq 0 ]]; then
         echo ">>> ${task}: no fresh output artifact written (${expected_json}). Marking as failure." >&2
         rc=3

@@ -173,9 +173,6 @@ class Go2B2StairClimbEnvCfg(UnitreeGo2RoughEnvCfg):
         # discourage extreme joint angles
         rw.dof_pos_limits.weight = -2.0
 
-        # Compact Apr15-style bundle: locomotion tracking + posture/contact
-        # penalties. Avoid dense progress rewards here because they encouraged
-        # bounding/hopping solutions that climb but do not walk cleanly.
         # rw.feet_air_time.weight = 0.02
         rw.feet_air_time.weight = 0.04
         # rw.feet_air_time.params["threshold"] = 0.25

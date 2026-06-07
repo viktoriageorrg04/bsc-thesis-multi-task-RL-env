@@ -341,7 +341,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     env_cfg.sim.device = device
     _maybe_add_conditioned_task_id(env_cfg, args_cli.task, reported_train_task)
 
-    # --- create the one and only env, load policy, and eval on training task ---
+    # create the one and only env, load policy, and eval on training task
     print(f"[INFO] Creating environment for: {args_cli.task}")
     t0 = time.time()
     env = gym.make(args_cli.task, cfg=env_cfg)
@@ -385,13 +385,13 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
         print(f"[EVAL {task_idx}/{len(eval_tasks)}] Policy: {train_short} | Task: {short}")
 
         if eval_task == args_cli.task:
-            # reuse the already-loaded env (no close+reopen needed)
+            # reuse the already-loaded env
             print(f"  Reusing loaded environment (same as training task)")
             episodes = _run_eval_on_env(policy, env, eval_task, args_cli.num_episodes, device)
         else:
             # for cross-eval on a different task, we need a new env
-            # NOTE: Isaac Sim may hang here if the first env was closed.
-            # Workaround: run with --eval_task for each task separately.
+            # NOTE: Isaac Sim may hang here if the first env was closed
+            # workaround: run with --eval_task for each task separately
             print(f"  [WARN] Cross-task eval requires new env. If it hangs, run separately:")
             print(f"         --task {eval_task} --eval_task {short}")
             try:
@@ -432,8 +432,8 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
         print(f"  failure_rate: {summary['failure_rate']:.2%}")
         print(f"  saved: {out_path}")
 
-    # write combined summary.
-    # When running single-task evals repeatedly (e.g. via cross_eval.sh with --eval_task),
+    # write combined summary
+    # when running single-task evals repeatedly (e.g. via cross_eval.sh with --eval_task),
     # keep previously-written task summaries and only update the current task key.
     combined_path = os.path.join(out_dir, "summary.json")
     summary_to_write = summary_all
@@ -445,7 +445,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
                 existing.update(summary_all)
                 summary_to_write = existing
         except Exception:
-            # Fall back to writing only current summary if existing file is unreadable.
+            # fall back to writing only current summary if existing file is unreadable
             summary_to_write = summary_all
 
     with open(combined_path, "w") as f:
@@ -464,8 +464,6 @@ if __name__ == "__main__":
         traceback.print_exc()
         exit_code = 1
     finally:
-        # Isaac Sim shutdown can occasionally hang in headless batch runs on Windows.
-        # In this mode we prefer deterministic process termination after outputs are written.
         if not args_cli.headless:
             try:
                 simulation_app.close()

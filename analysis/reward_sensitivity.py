@@ -1,1 +1,0 @@
-"""Reward-scaling sensitivity study."""

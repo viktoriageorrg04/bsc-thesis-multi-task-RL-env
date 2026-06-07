@@ -33,7 +33,7 @@ def _safe_base_height_l2(
     if sensor_cfg is not None:
         sensor = env.scene[sensor_cfg.name]
         ray_z = sensor.data.ray_hits_w[..., 2]
-        # filter out inf/nan rays before averaging
+        # filter out inf/nan rays before avg
         valid = torch.isfinite(ray_z)
         ray_z_clean = torch.where(valid, ray_z, torch.zeros_like(ray_z))
         valid_count = valid.float().sum(dim=1).clamp(min=1.0)
@@ -48,7 +48,7 @@ def _safe_base_height_l2(
 
 
 # C2 terrain: 100% gap crossing
-# gap_width_range = (0.0, 0.20) -> zero gap at difficulty 0 (flat), 20 cm at max
+# gap_width_range = (0.0, 0.20)
 _GAP_TERRAIN_GEN = TerrainGeneratorCfg(
     size=(8.0, 8.0),
     border_width=20.0,
@@ -75,8 +75,7 @@ def _apply_c2_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
     rw.track_lin_vel_xy_exp.weight = 2.0
     rw.track_ang_vel_z_exp.weight = 1.0
 
-    # Keep only a mild stepping incentive.  A large feet-air-time weight can
-    # be exploited by holding a rear leg in the air while still moving forward.
+    # keep only a mild stepping incentive
     rw.feet_air_time.weight = 0.08
     rw.feet_air_time.params["threshold"] = 0.20
 
@@ -90,7 +89,7 @@ def _apply_c2_rewards(cfg: UnitreeGo2RoughEnvCfg) -> None:
         },
     )
 
-    # posture: B1-proven weights
+    # posture
     rw.flat_orientation_l2 = RewTerm(func=core_mdp.flat_orientation_l2, weight=-5.0)
     rw.base_height = RewTerm(
         func=_safe_base_height_l2,

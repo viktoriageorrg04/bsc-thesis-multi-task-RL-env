@@ -311,8 +311,8 @@ def _latest_events_file(log_dir: str) -> str | None:
 
 def _read_scalar_series(log_dir: str, tag: str) -> tuple[np.ndarray, np.ndarray] | None:
     """Load scalar series for one TensorBoard tag."""
-    # Use the directory, not a single file — EventAccumulator aggregates
-    # all events files in the directory so the full training is captured.
+    # use the dir, not a single file; EventAccumulator aggregates
+    # all events files in the dir so the full training is captured
     if not glob(os.path.join(log_dir, "events.out.tfevents.*")):
         return None
 
@@ -825,9 +825,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), agent_cfg)
 
-    # train. By default this follows the original baseline path: one continuous
-    # RSL-RL learn() call. Chunked training is used only when early stopping or
-    # reward scheduling is explicitly enabled.
     trained_iterations = _train_with_early_stopping(
         runner=runner,
         max_iterations=int(agent_cfg.max_iterations),

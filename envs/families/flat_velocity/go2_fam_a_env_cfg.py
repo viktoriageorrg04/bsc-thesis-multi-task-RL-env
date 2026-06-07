@@ -43,7 +43,7 @@ class Go2A1ForwardWalkEnvCfg(UnitreeGo2RoughEnvCfg):
     def __post_init__(self):
         super().__post_init__()
 
-        # flat terrain — height scanner stays for obs compatibility
+        # flat terrain (height scanner stays for obs compatibility)
         self.scene.terrain.terrain_type = "plane"
         self.scene.terrain.terrain_generator = None
 
@@ -53,7 +53,7 @@ class Go2A1ForwardWalkEnvCfg(UnitreeGo2RoughEnvCfg):
         # fix rough-env reward defaults
         _apply_flat_reward_fixes(self)
 
-        # forward-only commands
+        # forward-only cmds
         cmd = self.commands.base_velocity
         cmd.heading_command = False
         cmd.rel_heading_envs = 0.0
@@ -92,8 +92,8 @@ class Go2A1ForwardWalkLegacyEnvCfg(Go2A1ForwardWalkEnvCfg):
     def __post_init__(self):
         super().__post_init__()
 
-        # The April A1 baseline used this always-on base-height term in
-        # addition to the command-gated stand_base_height term.
+        # the April A1 baseline used this always-on base-height term in
+        # addition to stand_base_height term
         self.rewards.base_height = RewTerm(
             func=core_mdp.base_height_l2,
             weight=-5.0,
@@ -115,7 +115,7 @@ class Go2A2OmniWalkEnvCfg(UnitreeGo2RoughEnvCfg):
     def __post_init__(self):
         super().__post_init__()
 
-        # flat terrain — height scanner stays for obs compatibility
+        # flat terrain (height scanner stays for obs compatibility)
         self.scene.terrain.terrain_type = "plane"
         self.scene.terrain.terrain_generator = None
 
@@ -125,7 +125,7 @@ class Go2A2OmniWalkEnvCfg(UnitreeGo2RoughEnvCfg):
         # fix rough-env reward defaults
         _apply_flat_reward_fixes(self)
 
-        # omni-directional commands
+        # omni-dir cmds
         cmd = self.commands.base_velocity
         cmd.heading_command = True
         cmd.rel_heading_envs = 1.0
@@ -135,7 +135,7 @@ class Go2A2OmniWalkEnvCfg(UnitreeGo2RoughEnvCfg):
         cmd.ranges.ang_vel_z = (-1.0, 1.0)
         cmd.ranges.heading = (-math.pi, math.pi)
 
-        # always-on height incentive — stronger than A1 to prevent ground-dragging
+        # always-on height incentive
         self.rewards.base_height = RewTerm(
             func=core_mdp.base_height_l2,
             weight=-4.0,

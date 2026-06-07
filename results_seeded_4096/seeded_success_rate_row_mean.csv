@@ -1,0 +1,2 @@
+train_task,mean_over_eval_tasks,std_over_eval_tasks
+MTL,0.777949,0.265557

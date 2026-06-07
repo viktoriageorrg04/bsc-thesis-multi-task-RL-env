@@ -69,7 +69,7 @@ class TaskSampler:
         if len(self.task_ids) == 0:
             raise ValueError("task_ids must not be empty")
 
-        # normalise weights -> probs
+        # norm weights -> probs
         if self.weights is None:
             raw = torch.ones(len(self.task_ids))
         else:
@@ -98,7 +98,7 @@ class TaskSampler:
 
     @property
     def probabilities(self) -> torch.Tensor:
-        """nomr sampling probabilities (read-only copy)"""
+        """norm sampling probabilities (read-only copy)"""
         return self._probs.clone()
 
     def sample(self) -> tuple[int, str]:

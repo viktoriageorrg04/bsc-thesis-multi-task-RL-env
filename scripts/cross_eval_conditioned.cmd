@@ -1,8 +1,8 @@
 @echo off
 setlocal
 
-REM Cross-evaluate one conditioned MTL checkpoint on all benchmark tasks.
-REM Usage:
+REM cross-eval one conditioned MTL checkpoint on all benchmark tasks
+REM usage:
 REM   scripts\cross_eval_conditioned.cmd C:\path\to\model.pt [num_episodes] [num_envs] [output_dir]
 
 if "%~1"=="" (

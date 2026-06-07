@@ -1,0 +1,2 @@
+train_task,A1_forward,A2_omni,B1_rough,B2_stairs,C2_gap,mean_over_eval_tasks
+MTL,0.005553,0.039576,0.031617,0.139328,0.044691,0.265557

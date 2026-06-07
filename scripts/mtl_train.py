@@ -372,9 +372,6 @@ def _apply_phase_profile_overrides(env_cfg: ManagerBasedRLEnvCfg, phase_profile:
         cmd.rel_heading_envs = 0.0
         cmd.rel_standing_envs = 0.0
 
-        # Match the single-task B2/C2 assumption that forward commands align with
-        # terrain direction. Random yaw on stairs/gaps injects non-stationary
-        # sideways/downhill variants into a phase intended to bridge toward full MTL.
         reset_base = getattr(getattr(env_cfg, "events", None), "reset_base", None)
         if reset_base is not None and isinstance(getattr(reset_base, "params", None), dict):
             pose_range = reset_base.params.get("pose_range")
