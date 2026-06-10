@@ -226,12 +226,15 @@ videos/
 # --- Evaluation results ---
 results/
 
-# helper docs (comment out before the next meeting)
-docs/task_family_plan.md
-docs/slides_extracted.txt
+# # helper docs (comment out before the next meeting)
+# docs/task_family_plan.md
+# docs/slides_extracted.txt
 
 outputs/
 
 # large experiment artefacts
 *.tar.gz
 *.pt
+
+docs/mtl_phase_checkpoint_log.md
+docs/mtl_phase_playbook.md

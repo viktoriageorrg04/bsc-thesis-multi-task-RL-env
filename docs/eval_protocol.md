@@ -42,7 +42,12 @@ For a policy trained on `A1_forward`:
   - `results/A1_forward/B2_stairs.json`
   - `results/A1_forward/C2_gap.json`
 
-`summary.json` is the canonical row-level matrix representation for that trained policy.
+For a unified MTL policy (`MTL-Unified-Unitree-Go2-AllTerrains-v0`), `cross_eval.sh` resolves the train_short to `MTL_unified`:
+
+- `results/MTL_unified/summary.json`
+- `results/MTL_unified/A1_forward.json` … `results/MTL_unified/C2_gap.json`
+
+`summary.json` is the canonical matrix representation for that trained policy.
 
 ## Matrix Representation
 
@@ -92,19 +97,23 @@ At minimum:
 
 ## Phase-Based Model Selection (Current Practice)
 
-For phased MTL training, evaluate checkpoints during each phase and select by task-specific targets instead of using only the final checkpoint.
+Phased MTL training uses `scripts/mtl_train.py` with `--phase_profile <name>` and
+`--sampling_strategy` to control terrain sampling.
+
+Evaluate checkpoints during each phase and select by task-specific targets instead
+of using only the final checkpoint.
 
 Selection priorities:
 
-1. Phase 0 and Phase 3 (rough retention focus)
+**Phase 0** (rough anchor) and **Phase 3** (rough recovery) — B1 retention focus:
 - Primary: `B1_rough.success_rate`
 - Gate: keep `B1_rough.success_rate >= 0.933`
 - Hard warning: repeated evals below `0.903` or `B1_rough.failure_rate > 0.10`
 
-2. Phase 1 (stairs rehearsal)
+**Phase 1** (stairs rehearsal):
 - Primary: improve `B2_stairs.success_rate` while keeping B1 above retention gate
 
-3. Phase 2 (gap rehearsal)
+**Phase 2** (gap rehearsal):
 - Primary: improve `C2_gap.success_rate` while keeping B1 above retention gate
 
 Practical cadence:

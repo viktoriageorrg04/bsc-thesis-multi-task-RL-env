@@ -36,6 +36,7 @@ Framework: Isaac Lab + rsl_rl PPO
 | `MTL-Custom-Gap-Unitree-Go2-C2-v0` | `Go2C2GapCrossingEnvCfg` |
 | `MTL-Custom-Gap-Unitree-Go2-C2-Flat-v0` | `Go2C2FlatPretrainEnvCfg` |
 | `MTL-Unified-Unitree-Go2-AllTerrains-v0` | `Go2MultiTaskEnvCfg` |
+<!-- | `MTL-Conditioned-Unitree-Go2-AllTerrains-v0` | `Go2MultiTaskConditionedEnvCfg` | -->
 | `*-Play-v0` variants | `*_PLAY` classes |
 
 ## Shared Interface
@@ -97,5 +98,3 @@ Evaluation uses per-task thresholds from `envs/success.py`.
 General pattern:
 - Per-step success: alive + tracking errors under task threshold.
 - Episode success: success-step ratio above task minimum and no failure termination.
-
-See `docs/eval_protocol.md` for reporting schema and matrix export rules.

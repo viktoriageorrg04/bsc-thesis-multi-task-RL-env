@@ -67,24 +67,43 @@ Interpretation rules:
 - Watch for peak-then-decline behavior across many checkpoints.
 - Trust cross-eval metrics over reward when deciding phase handoff.
 
+## Available `--phase_profile` Values
+
+The `--phase_profile` flag (on `scripts/mtl_train.py`) applies per-terrain command
+and reward overrides on top of the terrain sampling proportions set by
+`--sampling_strategy`. Available profiles:
+
+| Profile | Description |
+|---------|-------------|
+| `default` / `p0_rough` | No overrides; unified env defaults |
+| `p0_gait` | Level-0 gait bootstrap with easier forward-biased commands |
+| `p1_b2_easy` | Easy corrected-stairs bridge after `p0_gait` |
+| `p1_b2_stepup` | Reduced step-height B2 curriculum |
+| `p1_b2_stepup_retain` | Reduced-height B2 with broad flat/rough rehearsal |
+| `p1_b2_ramp` | Stair-heavy transition bridge from easy B2 to benchmark B2 |
+| `p1_mixed` | Intermediate command/terrain curriculum after `p0_gait` |
+| `p1_omni` | Bridge from `p1_mixed` toward full omni/heading eval commands |
+| `p1_stairs` | Stair-biased commands + reward tuning for B2 rehearsal stability |
+| `p2_b2safe` | Balanced recovery while retaining a small B2 progress signal |
+
 ## Example Commands
 
 ```bash
-# Phase 0
+# Phase 0 — rough anchor (focus sampling + no profile overrides)
 C:\...\isaaclab.bat -p scripts/mtl_train.py \
   --task MTL-Unified-Unitree-Go2-AllTerrains-v0 \
-  --headless --num_envs 512 --max_iterations 400 \
+  --headless --num_envs 1024 --max_iterations 1500 \
   --pretrained_checkpoint logs/rsl_rl/unitree_go2_rough/<run>/model_1499.pt \
-  --sampling_strategy focus --focus_terrain rough --focus_prob 0.75 \
-  --noise_std_type scalar --init_noise_std 1.0 \
-  --learning_rate 1e-4 --schedule adaptive --entropy_coef 0.01 \
-  --experiment_name unitree_go2_mtl_schedule_v3 --run_name p0_rough_anchor
+  --sampling_strategy custom --custom_terrain_probs "0.35 0.35 0.15 0.15" \
+  --phase_profile p2_b2safe \
+  --learning_rate 3e-4 --entropy_coef 0.001 \
+  --experiment_name unitree_go2_mtl_schedule --run_name p0_balanced_b2safe
 ```
 
 ```bash
 # Cross-eval current phase checkpoint
 bash scripts/cross_eval.sh \
   MTL-Unified-Unitree-Go2-AllTerrains-v0 \
-  logs/rsl_rl/unitree_go2_mtl_schedule_v3/<run>/model_<iter>.pt \
+  logs/rsl_rl/unitree_go2_mtl_schedule/<run>/model_<iter>.pt \
   64 256
 ```

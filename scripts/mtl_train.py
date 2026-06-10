@@ -462,7 +462,7 @@ def _apply_phase_profile_overrides(env_cfg: ManagerBasedRLEnvCfg, phase_profile:
     if profile != "p1_stairs":
         raise ValueError(f"Unknown phase profile: {profile}")
 
-    # Command profile: forward-biased stair climbing
+    # cmd profile: forward-biased stair climbing
     cmd = env_cfg.commands.base_velocity
     cmd.heading_command = False
     cmd.rel_heading_envs = 0.0
@@ -472,14 +472,14 @@ def _apply_phase_profile_overrides(env_cfg: ManagerBasedRLEnvCfg, phase_profile:
     cmd.ranges.ang_vel_z = (0.0, 0.0)
     cmd.ranges.heading = (0.0, 0.0)
 
-    # Keep reset heading close to forward, when available.
+    # keep reset heading close to forward, when available
     reset_base = getattr(getattr(env_cfg, "events", None), "reset_base", None)
     if reset_base is not None and isinstance(getattr(reset_base, "params", None), dict):
         pose_range = reset_base.params.get("pose_range")
         if isinstance(pose_range, dict):
             pose_range["yaw"] = (-0.2, 0.2)
 
-    # Reward profile: B2-inspired tuning while staying in unified MTL task.
+    # reward profile: B2-inspired tuning while staying in unified MTL task
     rw = env_cfg.rewards
     rw.flat_orientation_l2.weight = -2.0
     rw.base_height.weight = -3.8
