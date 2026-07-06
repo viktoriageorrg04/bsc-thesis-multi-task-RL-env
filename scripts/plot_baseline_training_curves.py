@@ -56,6 +56,7 @@ TASKS = [
 ]
 
 MTL_PHASE_BOUNDARIES = [
+    (0, "P0\nbalanced", 0.95),
     (1500, "P1\nstep-up", 0.95),
     (2000, "P1\nramp", 0.82),
     (2100, "P2\nrecover", 0.95),
@@ -164,6 +165,7 @@ def make_figure(root: Path, out: Path, dpi: int = 150) -> None:
         )
 
         if task.get("mtl"):
+            ax.set_xlim(left=-60, right=max(steps) + 40)
             for x_pos, label, y_frac in MTL_PHASE_BOUNDARIES:
                 ax.axvline(
                     x=x_pos,

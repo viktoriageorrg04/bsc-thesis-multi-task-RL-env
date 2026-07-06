@@ -238,3 +238,5 @@ outputs/
 
 docs/mtl_phase_checkpoint_log.md
 docs/mtl_phase_playbook.md
+
+uv.lock

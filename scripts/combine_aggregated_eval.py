@@ -46,6 +46,14 @@ def _as_float(value: str) -> float | None:
     return float(value)
 
 
+def _annotation_color(im, value: float) -> str:
+    """Choose readable text color from the rendered cell shade."""
+    r, g, b, _ = im.cmap(im.norm(value))
+    # Relative luminance approximation for sRGB.
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return "white" if luminance < 0.45 else "#222222"
+
+
 def _write_markdown(path: Path, rows: list[dict[str, str]]) -> None:
     fields = ["train_task", *TASK_ORDER, "mean_over_eval_tasks"]
     with path.open("w", encoding="utf-8") as f:
@@ -86,7 +94,8 @@ def _write_heatmap(path: Path, rows: list[dict[str, str]], metric: str) -> None:
         for j, task in enumerate(TASK_ORDER):
             value = _as_float(row.get(task, ""))
             label = "" if value is None else f"{value:.3f}"
-            ax.text(j, i, label, ha="center", va="center", fontsize=8, color="black")
+            color = "#222222" if value is None else _annotation_color(im, value)
+            ax.text(j, i, label, ha="center", va="center", fontsize=8, color=color)
     fig.tight_layout(pad=0.6)
     fig.savefig(path, dpi=220, bbox_inches="tight", pad_inches=0.04)
     plt.close(fig)

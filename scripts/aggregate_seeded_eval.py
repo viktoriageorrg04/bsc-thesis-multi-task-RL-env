@@ -43,6 +43,14 @@ def _fmt(value: float | None) -> str:
     return "" if value is None else f"{value:.6f}"
 
 
+def _annotation_color(im, value: float) -> str:
+    """Choose readable text color from the rendered cell shade."""
+    r, g, b, _ = im.cmap(im.norm(value))
+    # Relative luminance approximation for sRGB.
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return "white" if luminance < 0.45 else "#222222"
+
+
 def _train_seed_from_summary(summary_path: Path, root: Path) -> tuple[str, str] | None:
     """Resolve the aggregate row and per-seed label for a summary path."""
     rel_parts = summary_path.relative_to(root).parts
@@ -220,7 +228,8 @@ def main() -> int:
                 for j, eval_task in enumerate(TASK_ORDER):
                     value = means[train][eval_task]
                     label = "" if value is None else f"{value:.3f}"
-                    ax.text(j, i, label, ha="center", va="center", fontsize=8, color="black")
+                    color = "#222222" if value is None else _annotation_color(im, value)
+                    ax.text(j, i, label, ha="center", va="center", fontsize=8, color=color)
             fig.tight_layout(pad=0.6)
             fig.savefig(heatmap_path, dpi=220, bbox_inches="tight", pad_inches=0.04)
             plt.close(fig)
